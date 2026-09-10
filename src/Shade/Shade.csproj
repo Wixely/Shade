@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CupriFace" Version="[0.20.0]" />
+    <PackageReference Include="CupriFace.Shell" Version="[0.20.0]" />
+  </ItemGroup>
+</Project>
