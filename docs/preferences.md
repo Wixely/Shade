@@ -16,12 +16,12 @@ Source: [Development preferences](../../PLAN/preferences/development.md).
 
 | Preference | Application to Shade / evidence required |
 | --- | --- |
-| C#/.NET 10 and top-level statements | Required stack, reinforced by the explicit request. Add the top-level entry point with the first prototype. |
+| C#/.NET 10 and top-level statements | Required stack, reinforced by the explicit request. Implemented in the first prototype. |
 | Native publishing | Prefer NativeAOT and one self-contained executable per supported platform/architecture, requiring no installed .NET runtime. Prove dependency and runtime compatibility; document any exception. A successful publish alone is insufficient. |
 | Windows primary, Linux secondary | Both are required by the user's explicit Shade request; Windows has priority. Validate both operating systems and identify supported Linux sessions. macOS is outside current scope. |
 | No Python/Node.js tooling without explicit permission | Applies to development, tests, builds, asset pipelines, dependencies' build tooling, and external testing. Do not introduce Tailwind or equivalent tooling transitively. Check exposed MCP capabilities and local MCPHub before using or proposing either runtime; that check does not authorize their use or integration installation. |
 | PowerShell 5.1 automation | Keep local Windows scripts compatible with the installed Windows PowerShell 5.1. Do not assume `pwsh` exists. Document actual Linux commands and validate them separately. |
-| VS Code debugging | Add repository-local launch/tasks configuration for each runnable project/sample, aligned with normal build/run commands. Verify the first prototype's debug path. There is no runnable project to debug yet. |
+| VS Code debugging | Repository-local launch/tasks configuration now matches tested build/run paths for app and checks. An actual debugger session remains unverified. |
 | Vendored assets | Keep third-party UI CSS, fonts, icons, JavaScript if ever needed, and other assets local; pin versions, preserve licenses/provenance, and document updates. Apply this to CupriFace assets as well as any future browser samples. |
 | Focus behavior | Avoid `tabindex="-1"` on non-input elements in UI markup. Use native semantics; document an explicit accessibility exception if one is required. Verify keyboard and assistive-technology operation. |
 
@@ -90,4 +90,4 @@ Validate in proportion to risk and distinguish tested results from assumptions. 
 - [ ] I6 / Codex: Complete the canonical publish/trim functional oracle and evidence report, including documented exceptions.
 - [ ] Before any remote/release work / Codex: Re-read hosting/privacy preferences and apply the applicable identity, access, retention, and release requirements.
 
-Preference incorporation is complete as of the review date. These implementation and publication checkpoints remain pending because Shade is still in investigation.
+Preference incorporation is complete as of the review date. Implementation checkpoints are partially verified in the [prototype evidence](prototype.md); full cross-platform, integration and publication checkpoints remain pending.

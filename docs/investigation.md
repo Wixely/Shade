@@ -1,6 +1,8 @@
 # Shade investigation plan
 
-- Status: Exploring
+Current implementation evidence: [Windows validation checkpoint, 2026-09-10](validation-2026-09-10.md), including settings-write recovery and dependency-download reliability fixes. Later status changes must retain the distinction between synthetic checks and physical acceptance.
+
+- Status: Windows feasibility prototype implemented; validation and required features in progress
 - Created / reviewed: 2026-09-10
 - Next review: 2026-09-17, or before implementation
 - Owner: Codex; product decisions: User
@@ -15,10 +17,15 @@
 5. Support multiple screens with independent variable shading.
 6. Provide Home Assistant integration. All shading and integration setup/control must be doable through the UI and verified end to end.
 7. Support Windows and Linux, with Windows the primary operating system.
+8. Minimize performance impact and specifically investigate gaming stutter and frame times.
+9. Automatically handle connected/disconnected screens and size/resolution/layout changes in real time, without manual repair.
+10. Attempt reliable repeatable monitor identity for settings and Home Assistant; keep layout separate from identity and explicitly handle ambiguity.
 
 ## Facts and decisions
 
-See [dated research](research.md) for verified observations and [the foundation decision](decisions/2026-09-10-project-foundation.md) for confirmed constraints. Remote hosting and licensing remain open. No application behavior is implemented or verified.
+The active goal is to build out the remaining product. See [the current buildout ledger](buildout-2026-09-10.md) for persistent control intent, Home Assistant implementation, new verification and the remaining acceptance gates. It supersedes the older pending implementation statuses below where explicitly noted; hardware, gaming, Linux overlay and real Home Assistant acceptance remain open.
+
+See [dated research](research.md), [prototype evidence](prototype.md), and the [live-topology/identity/performance decision](decisions/2026-09-10-live-topology-and-performance.md). An original Windows prototype now builds and has passed initial native, headless and live UI Automation checks. Remote hosting and licensing remain open.
 
 ## Shared preferences
 
@@ -26,8 +33,9 @@ The [shared preferences applied to Shade](preferences.md) are part of this plan.
 
 ## Required capabilities and proposed supporting features
 
-- A monitor map reflecting desktop arrangement, with readable labels and per-monitor dimming sliders.
-- Individual enable/disable, optional linked adjustment, and restore-all action.
+- A monitor map reflecting desktop arrangement, with screen-shaped toggle buttons and readable numbers.
+- A global slider above the map; individual sliders behind a collapsed Advanced disclosure; scrolling for overflowing content. [Implemented controls and verification](controls-2026-09-10.md).
+- Individual enable/disable and restore-all action.
 - Tray access, a recovery hotkey, and persisted settings with stable monitor matching.
 - Required Home Assistant integration, with MQTT as the initial transport to investigate: UI-based setup, connection testing, discovery, per-screen control, status, and actionable errors.
 - Required Windows and Linux implementations, with supported Linux desktop/session environments established through testing.
@@ -56,11 +64,11 @@ JSON is the initial settings hypothesis; no database requirement is established.
 | ID | Work / owner | Exit evidence | Status |
 | --- | --- | --- | --- |
 | I1 | Reference behavior inventory / Codex | Documented capabilities separated from unknowns; original-code boundary recorded | Initial review complete; detailed behavior remains |
-| I2 | CupriFace dependency and host spike / Codex | Pin package provenance; original slider changes a model; GPU/software input and UIA checks; determine host lifecycle/thread constraints | Next |
-| I3 | Windows overlay spike / Codex | Two monitors dim independently; input passes through; focus stays with other apps; restore hotkey and exit remove overlays | Pending |
-| I4 | Topology and state / Codex | Mixed DPI, negative coordinates, rotation, cloned displays, unplug/replug, docking, sleep/resume and identity tests | Pending |
+| I2 | CupriFace dependency and host spike / Codex | Pin package provenance; original slider changes a model; GPU/software input and UIA checks; determine host lifecycle/thread constraints | Prototype and live GPU/software UIA checks passed; debugger and further input checks remain |
+| I3 | Windows overlay spike / Codex | Two monitors dim independently; input passes through; focus stays with other apps; restore hotkey and exit remove overlays | Native checks passed on six displays; real input/game matrix remains |
+| I4 | Topology and state / Codex | Mixed DPI, negative coordinates, rotation, cloned displays, unplug/replug, docking, sleep/resume and identity tests | Automatic reconciliation, serial identity and settings implemented; injected topology/reconnect tests passed; real hardware continuity and ambiguous enrollment remain |
 | I5 | Home Assistant implementation specification / Codex | Define UI setup/test/discovery flow, dimming scale, stable identifiers, availability, reconnect, retained commands and credential storage; determine existing-entity migration needs | Pending |
-| I6 | Packaging and performance / Codex | Complete the [shared publishing/functional-equivalence requirements](preferences.md); test published executable without .NET installed; record NativeAOT/trim decision, warnings, oracle, size, startup/idle CPU/memory evidence | Pending |
+| I6 | Packaging and performance / Codex | Complete the [shared publishing/functional-equivalence requirements](preferences.md); test published executable without .NET installed; record NativeAOT/trim decision, warnings, oracle, size, startup/idle CPU/memory evidence and game frame-time comparisons | Initial overlay/UI idle samples recorded; gaming, packaging and NativeAOT remain |
 | I7 | Required Linux backend feasibility / Codex | Separate X11 and Wayland evidence, required compositor capabilities and tray/hotkey limitations; choose and test supported environments; escalate gaps without silently dropping Linux | Pending |
 | I8 | First-release scope / User, technical synthesis / Codex | Acceptance criteria agreed from evidence; unresolved gaps recorded; implementation backlog ready | Pending |
 
@@ -107,8 +115,9 @@ Dependencies: usable pinned CupriFace packages, Windows native interop, Linux di
 
 ## Next actions
 
-1. Codex: I2, verify CupriFace 0.20.0 package APIs and dependency provenance; produce the smallest original control-window prototype with VS Code debugging.
-2. Codex: I3 and I7, test native per-monitor overlays and emergency restore on Windows, then resolve Linux backend feasibility early enough to inform architecture.
-3. Codex: Record evidence and refine the first-release backlog; User: resolve scope questions when they affect implementation.
+1. Codex/User: I3/I4/I6, validate actual hotplug, mode changes, docking/reboot identity continuity and game frame times; investigate UI host wakeups. Recommended next step.
+2. Codex: I4/I5, implement UI assignment for ambiguous screens and Home Assistant workflows using stable IDs; specify entity migration and installation identity. The arrangement view and Advanced controls are implemented.
+3. Codex: I7, resolve and test required Linux X11/Wayland environments early; User: identify representative Linux desktops and games when needed for validation.
+4. Codex: Complete debugger validation, settings-error recovery UI and I6 published functional equivalence after the runtime baseline is sufficiently proven.
 
-Current request completion: the local repository and initial investigation documents are created. All application implementation, builds, runtime validation, and remote publication remain future work.
+Current progress: first Windows implementation is runnable with dependency pins, VS Code configurations and original automated checks. Multi-display native and live GPU/software UIA checks have passed. This is a feasibility milestone, not completion of the full product. Remaining required work is listed above; remote publication is not authorized.

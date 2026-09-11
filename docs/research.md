@@ -33,3 +33,11 @@ The local checkout contains unrelated pending edits and was left unchanged. Thes
 ## Local tooling
 
 `dotnet --list-sdks` returned SDK 10.0.300 alongside an older SDK. No package restore, compiler/toolchain check for NativeAOT, build, UI launch, monitor changes, or MQTT connection was performed. Dependency availability and publish compatibility remain unverified.
+
+## Implementation follow-up: 2026-09-10
+
+The historical findings above describe the pre-implementation investigation. The first implementation now restores the official pinned release packages and builds under SDK 10.0.300. [Dependency provenance](dependencies.md) records exact package hashes and manifests; [prototype evidence](prototype.md) records current tests and remaining limitations. Neither the legacy source nor its assets/configuration/history were consulted or imported.
+
+Original Windows integration uses documented [layered-window semantics](https://learn.microsoft.com/en-us/windows/win32/winmsg/window-features), [RegisterHotKey](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerhotkey), [QueryDisplayConfig](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-querydisplayconfig), and [target device names](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_target_device_name). Query buffer sizing can race a topology change, so insufficient-buffer responses are retried. Source names are correlated to current physical rectangles; hardware identity is separate.
+
+The EDID base-block parser uses the manufacturer/product and serial fields defined in the VESA E-EDID specification ([authored specification, mirrored PDF](https://glenwing.github.io/docs/VESA-EEDID-A2.pdf)); it checks the header/checksum and excludes layout and timing data. Microsoft's [EDID override documentation](https://learn.microsoft.com/en-us/windows-hardware/drivers/display/overriding-monitor-edids) establishes that registry EDID data is not an immutable physical identity guarantee. Missing/duplicate serials, overrides, docks and firmware changes remain explicit identity risks. The [decision record](decisions/2026-09-10-live-topology-and-performance.md) documents the current conservative recall policy.
