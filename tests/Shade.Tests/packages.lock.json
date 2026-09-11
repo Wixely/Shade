@@ -2,46 +2,19 @@
   "version": 1,
   "dependencies": {
     "net10.0": {
+      "MQTTnet.Server": {
+        "type": "Direct",
+        "requested": "[5.2.0.1603, )",
+        "resolved": "5.2.0.1603",
+        "contentHash": "o0zmNXtDJlDsa3796C6HBrSwwVDOzQRibK9vpixFk38Gu6ZWT+BDBRekgDQ+OjRk3ornjSqkKzBqBzMDLJ2Zdw==",
+        "dependencies": {
+          "MQTTnet": "5.2.0.1603"
+        }
+      },
       "AngleSharp": {
         "type": "Transitive",
         "resolved": "1.7.0",
         "contentHash": "v1R++46dblGRBo2/fKFUfgtZOaFnDGQhqBM0AarxgZSJuumj1e1vexBbjlTv2hx3Olr3qeoJa2yUoWyv5fuJ5A=="
-      },
-      "CupriFace": {
-        "type": "Transitive",
-        "resolved": "0.20.0",
-        "contentHash": "I5GkFZzarxMUeABIXNlxlBEDid80Hz0GKd5Ti9z55C70mQs9RjSDi5j1AcWfrqVgzAEeglybbjTzK0b2a4oBCw==",
-        "dependencies": {
-          "AngleSharp": "1.7.0",
-          "HarfBuzzSharp.NativeAssets.Linux": "8.3.0.1",
-          "HarfBuzzSharp.NativeAssets.Win32": "8.3.0.1",
-          "HarfBuzzSharp.NativeAssets.macOS": "8.3.0.1",
-          "SkiaSharp": "3.116.1",
-          "SkiaSharp.HarfBuzz": "3.116.1",
-          "SkiaSharp.NativeAssets.Linux": "3.116.1",
-          "SkiaSharp.NativeAssets.Win32": "3.116.1",
-          "SkiaSharp.NativeAssets.macOS": "3.116.1"
-        }
-      },
-      "CupriFace.Shell": {
-        "type": "Transitive",
-        "resolved": "0.20.0",
-        "contentHash": "5+qIdy+S0ehuEbrFJaS/44hnhIgURmPSpRRoC8TwrodAlf9XOKW+XWEI/zsn5FXnV8czakzXU1JJlr//xGHe/A==",
-        "dependencies": {
-          "CupriFace": "0.20.0",
-          "HarfBuzzSharp.NativeAssets.Linux": "8.3.0.1",
-          "HarfBuzzSharp.NativeAssets.Win32": "8.3.0.1",
-          "HarfBuzzSharp.NativeAssets.macOS": "8.3.0.1",
-          "Silk.NET.Input": "2.22.0",
-          "Silk.NET.OpenGL": "2.22.0",
-          "Silk.NET.SDL": "2.22.0",
-          "Silk.NET.Windowing": "2.22.0",
-          "SkiaSharp": "3.116.1",
-          "SkiaSharp.NativeAssets.Linux": "3.116.1",
-          "SkiaSharp.NativeAssets.Win32": "3.116.1",
-          "SkiaSharp.NativeAssets.macOS": "3.116.1",
-          "Tmds.DBus.Protocol": "0.94.2"
-        }
       },
       "HarfBuzzSharp": {
         "type": "Transitive",
@@ -76,6 +49,11 @@
         "type": "Transitive",
         "resolved": "8.0.0",
         "contentHash": "NSmDw3K0ozNDgShSIpsZcbFIzBX4w28nDag+TfaQujkXGazBm+lid5onlWoCBy4VsLxqnnKjEBbGSJVWJMf43g=="
+      },
+      "MQTTnet": {
+        "type": "Transitive",
+        "resolved": "5.2.0.1603",
+        "contentHash": "iNuWVo/568aRo2ExEN2qkC4J5b07ckKqt+9Uok2kIbbK7PMBsXvYiKVENPHmOBWFB5ExhlNQb/qQ8M9/IYRTdQ=="
       },
       "Silk.NET.Core": {
         "type": "Transitive",
@@ -205,6 +183,11 @@
         "resolved": "3.116.1",
         "contentHash": "dRQ75MCI8oz6zAs2Y1w6pq6ARs4MhdNG+gf3doOxOxdnueDXffQLGQIxON54GDoxc0WjKOoHMKBR4DhaduwwQw=="
       },
+      "System.Security.Cryptography.ProtectedData": {
+        "type": "Transitive",
+        "resolved": "10.0.0",
+        "contentHash": "qy6C3gQRTrfhFfuiIYU1jNwWfFdJpBVo1BARW7jgMm1zTEm3LRzLLyOLJGaAuKE+nZCGkEP71y4rj9NWjqLGdQ=="
+      },
       "Tmds.DBus.Protocol": {
         "type": "Transitive",
         "resolved": "0.94.2",
@@ -220,11 +203,40 @@
         "resolved": "2.30.8",
         "contentHash": "akI6qe9zjA3T9Y5421cfHYKonIkV1rSr3Dgo5qOwxthXXRwTVsnJwb/Ap2x6/6BZcbhczeY+4aUw+2FYJF9LYw=="
       },
+      "CupriFace": {
+        "type": "Project",
+        "dependencies": {
+          "AngleSharp": "[1.7.0, )",
+          "HarfBuzzSharp.NativeAssets.Linux": "[8.3.0.1, )",
+          "HarfBuzzSharp.NativeAssets.Win32": "[8.3.0.1, )",
+          "HarfBuzzSharp.NativeAssets.macOS": "[8.3.0.1, )",
+          "SkiaSharp": "[3.116.1, )",
+          "SkiaSharp.HarfBuzz": "[3.116.1, )",
+          "SkiaSharp.NativeAssets.Linux": "[3.116.1, )",
+          "SkiaSharp.NativeAssets.Win32": "[3.116.1, )",
+          "SkiaSharp.NativeAssets.macOS": "[3.116.1, )"
+        }
+      },
+      "CupriFace.Shell": {
+        "type": "Project",
+        "dependencies": {
+          "CupriFace": "[1.0.0, )",
+          "Silk.NET.Input": "[2.22.0, )",
+          "Silk.NET.OpenGL": "[2.22.0, )",
+          "Silk.NET.SDL": "[2.22.0, )",
+          "Silk.NET.Windowing": "[2.22.0, )",
+          "SkiaSharp": "[3.116.1, )",
+          "Tmds.DBus.Protocol": "[0.94.2, )"
+        }
+      },
       "shade": {
         "type": "Project",
         "dependencies": {
-          "CupriFace": "[0.20.0, 0.20.0]",
-          "CupriFace.Shell": "[0.20.0, 0.20.0]"
+          "CupriFace": "[1.0.0, )",
+          "CupriFace.Shell": "[1.0.0, )",
+          "MQTTnet": "[5.2.0.1603, )",
+          "System.Security.Cryptography.ProtectedData": "[10.0.0, )",
+          "Tmds.DBus.Protocol": "[0.94.2, )"
         }
       }
     }

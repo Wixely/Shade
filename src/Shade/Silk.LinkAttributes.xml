@@ -1,0 +1,54 @@
+<linker>
+  <!-- Silk.NET 2.22.0 stores a platform Type in these assembly attributes, then
+       invokes Activator.CreateInstance(type, nonPublic: true). Propagate the
+       constructor requirement from the consumer back to the attribute argument.
+       5 = PublicParameterlessConstructor | NonPublicConstructors.
+       These are preservation annotations, not warning suppressions.
+       Revalidate against the pinned dependency and SDK on upgrades. -->
+  <assembly fullname="Silk.NET.Input.Common">
+    <type fullname="Silk.NET.Input.InputPlatformAttribute">
+      <method signature="System.Void .ctor(System.Type)">
+        <parameter name="type">
+          <attribute fullname="System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute">
+            <argument type="System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes">5</argument>
+          </attribute>
+        </parameter>
+      </method>
+      <field name="&lt;Type&gt;k__BackingField">
+        <attribute fullname="System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute">
+          <argument type="System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes">5</argument>
+        </attribute>
+      </field>
+      <method signature="System.Type get_Type()">
+        <return>
+          <attribute fullname="System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute">
+            <argument type="System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes">5</argument>
+          </attribute>
+        </return>
+      </method>
+    </type>
+  </assembly>
+  <assembly fullname="Silk.NET.Windowing.Common">
+    <type fullname="Silk.NET.Windowing.WindowPlatformAttribute">
+      <method signature="System.Void .ctor(System.Type)">
+        <parameter name="type">
+          <attribute fullname="System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute">
+            <argument type="System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes">5</argument>
+          </attribute>
+        </parameter>
+      </method>
+      <field name="&lt;Type&gt;k__BackingField">
+        <attribute fullname="System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute">
+          <argument type="System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes">5</argument>
+        </attribute>
+      </field>
+      <method signature="System.Type get_Type()">
+        <return>
+          <attribute fullname="System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute">
+            <argument type="System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes">5</argument>
+          </attribute>
+        </return>
+      </method>
+    </type>
+  </assembly>
+</linker>

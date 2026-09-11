@@ -10,7 +10,7 @@ public sealed class WindowsDimmingBackend : IDimmingBackend
 {
     private sealed class Overlay(Display display, nint window)
     {
-        public Display Display { get; } = display;
+        public Display Display { get; set; } = display;
         public nint Window { get; } = window;
         public int Level;
     }
@@ -20,17 +20,78 @@ public sealed class WindowsDimmingBackend : IDimmingBackend
     private readonly Thread thread;
     private readonly WindowProcedure procedure;
     private readonly List<Overlay> overlays = [];
+    private sealed record Snapshot(IReadOnlyList<Display> Displays, IReadOnlyDictionary<string, int> Levels, long Revision, long RestoreVersion);
+    private volatile Snapshot snapshot = new(Array.Empty<Display>(), new Dictionary<string, int>(), 0, 0);
+    private readonly SettingsStore? store;
+    private readonly ShadeSettings settings;
+    private readonly Func<ISet<string>, IReadOnlyList<Display>> catalog;
+    private readonly uint recoveryKey;
     private readonly string className = "Shade.Overlay." + Guid.NewGuid().ToString("N");
     private nint controller;
     private bool stopping, unavailable, restoreRequested, topologyChanged;
+    private bool hotkeyAvailable, settingsDirty;
     private bool disposed;
     private Exception? failure;
     private volatile string status = "Starting overlays...";
-    public IReadOnlyList<Display> Displays { get; private set; } = [];
-    public string Status => status;
-
-    public WindowsDimmingBackend()
+    public IReadOnlyList<Display> Displays => snapshot.Displays;
+    public long Revision => snapshot.Revision;
+    private long restoreVersion;
+    public long RestoreVersion => snapshot.RestoreVersion;
+    public string Status => store?.Error ?? status;
+    public bool SettingsNeedRecovery => store?.Error is not null;
+    public bool SettingsNeedBackup => store?.PreservingUnreadableFile == true;
+    public void RecoverSettings() => Invoke(() =>
     {
+        if (store is not null && store.Recover(settings)) { settingsDirty = false; KillTimer(controller, 2); }
+        Publish();
+    });
+    private volatile ControlPreferences? preferences;
+    public ControlPreferences? Preferences => preferences;
+    private IReadOnlyList<Display> rawDisplays = Array.Empty<Display>();
+    private volatile AssignmentChoice[] assignmentChoices = [];
+    public bool SupportsAssignments => true;
+    public IReadOnlyList<AssignmentChoice> Assignments => Array.AsReadOnly(assignmentChoices);
+    public void AssignScreen(string connectionId, string name, string? existingId = null) => Invoke(() =>
+    {
+        // Read fresh topology before trusting a UI selection that may have been on screen for a while.
+        var current = catalog(settings.AmbiguousHardware);
+        IdentityAssignments.Assign(settings, current, connectionId, name, existingId);
+        PublishPreferences();
+        ScheduleSave();
+        Reconcile();
+    });
+    public void DetachAssignment(string id) => Invoke(() =>
+    {
+        IdentityAssignments.Detach(settings, id);
+        PublishPreferences();
+        ScheduleSave();
+        Reconcile();
+    });
+    public void SavePreferences(ControlPreferences value) => Invoke(() =>
+    {
+        settings.GlobalLevel = DimLevel.Validate(value.GlobalLevel);
+        foreach (var display in overlays.Select(o => o.Display).Where(d => d.CanRemember))
+            if (value.Screens.TryGetValue(display.Id, out var control))
+            {
+                DimLevel.Validate(control.IndividualLevel);
+                settings.Controls[display.Id] = control;
+            }
+        PublishPreferences();
+        ScheduleSave();
+    });
+
+    private void PublishPreferences() => preferences = new(settings.GlobalLevel,
+        new System.Collections.ObjectModel.ReadOnlyDictionary<string, RememberedControl>(new Dictionary<string, RememberedControl>(settings.Controls)));
+
+    public WindowsDimmingBackend(string? settingsPath = null) : this(settingsPath, WindowsDisplayCatalog.Read) { }
+
+    internal WindowsDimmingBackend(string? settingsPath, Func<ISet<string>, IReadOnlyList<Display>> catalog, uint recoveryKey = 0x52)
+    {
+        this.catalog = catalog;
+        this.recoveryKey = recoveryKey;
+        store = settingsPath is null ? null : new SettingsStore(settingsPath);
+        settings = store?.Load() ?? new();
+        PublishPreferences();
         procedure = WindowProc;
         thread = new Thread(Run) { IsBackground = true, Name = "Shade overlays" };
         thread.Start();
@@ -40,9 +101,8 @@ public sealed class WindowsDimmingBackend : IDimmingBackend
 
     public int GetLevel(string id)
     {
-        var overlay = overlays.SingleOrDefault(o => o.Display.Id == id)
-            ?? throw new ArgumentException("Unknown display.", nameof(id));
-        return Volatile.Read(ref overlay.Level);
+        // A stale UI frame can refer to a just-disconnected display; report it undimmed.
+        return snapshot.Levels.GetValueOrDefault(id);
     }
 
     public void SetLevel(string id, int level)
@@ -50,14 +110,37 @@ public sealed class WindowsDimmingBackend : IDimmingBackend
         DimLevel.Validate(level);
         Invoke(() =>
         {
-            if (unavailable && level != 0) throw new InvalidOperationException("Dimming disabled; restart required.");
+            if (unavailable && level != 0) throw new InvalidOperationException("Dimming is temporarily unavailable.");
             var overlay = overlays.SingleOrDefault(o => o.Display.Id == id)
                 ?? throw new ArgumentException("Unknown display.", nameof(id));
+            if (overlay.Level == level) return;
             Apply(overlay, level);
+            Remember(overlay);
+            Publish();
         });
     }
 
-    public void RestoreAll() => Invoke(Restore);
+    public void RestoreAll() => Invoke(RestoreAndForgetLevels);
+
+    public void SetLevels(IReadOnlyDictionary<string, int> levels)
+    {
+        var changes = levels.Select(p => (p.Key, Level: DimLevel.Validate(p.Value))).ToArray();
+        if (changes.Length == 0) return;
+        Invoke(() =>
+        {
+            if (unavailable && changes.Any(p => p.Level != 0)) throw new InvalidOperationException("Dimming is temporarily unavailable.");
+            // Resolve every target before changing any surface; hotplug may invalidate a UI frame.
+            var targets = changes.Select(p => (Overlay: overlays.SingleOrDefault(o => o.Display.Id == p.Key)
+                ?? throw new ArgumentException("Unknown display."), p.Level)).ToArray();
+            var changed = false;
+            foreach (var target in targets)
+            {
+                if (target.Overlay.Level == target.Level) continue;
+                Apply(target.Overlay, target.Level); Remember(target.Overlay); changed = true;
+            }
+            if (changed) Publish();
+        });
+    }
 
     private static void Check(bool success)
     {
@@ -80,14 +163,116 @@ public sealed class WindowsDimmingBackend : IDimmingBackend
 
     private void Restore()
     {
-        foreach (var overlay in overlays) Apply(overlay, 0);
+        // Hide even if a previous native operation failed before updating the tracked level.
+        foreach (var overlay in overlays) { ShowWindow(overlay.Window, 0); Volatile.Write(ref overlay.Level, 0); }
     }
+
+    private void RestoreAndForgetLevels()
+    {
+        Restore();
+        Interlocked.Increment(ref restoreVersion);
+        foreach (var key in settings.Displays.Keys.ToArray()) settings.Displays[key] = settings.Displays[key] with { Level = 0 };
+        foreach (var key in settings.Controls.Keys.ToArray()) settings.Controls[key] = settings.Controls[key] with { Enabled = false };
+        PublishPreferences();
+        ScheduleSave();
+        Publish();
+    }
+
+    private void Remember(Overlay overlay)
+    {
+        var d = overlay.Display;
+        if (!d.CanRemember) return;
+        settings.Displays[d.Id] = new(overlay.Level, d.X, d.Y, d.Width, d.Height);
+        ScheduleSave();
+    }
+
+    private void ScheduleSave()
+    {
+        settingsDirty = true;
+        if (store is not null && SetTimer(controller, 2, 750, 0) == 0)
+            throw new Win32Exception(Marshal.GetLastWin32Error());
+    }
+
+    private void Save()
+    {
+        KillTimer(controller, 2);
+        if (settingsDirty && store is not null) { store.Save(settings); settingsDirty = false; Publish(); }
+    }
+
+    private void Publish()
+    {
+        assignmentChoices = settings.Assignments.Select(p => new AssignmentChoice(p.Key, p.Value.Name,
+            rawDisplays.Any(d => d.Id == p.Value.ConnectionId))).ToArray();
+        snapshot = new(Array.AsReadOnly(overlays.Select(o => o.Display).ToArray()),
+            overlays.ToDictionary(o => o.Display.Id, o => o.Level), snapshot.Revision + 1, restoreVersion);
+    }
+
+    private void Reconcile()
+    {
+        try
+        {
+            rawDisplays = catalog(settings.AmbiguousHardware);
+            var displays = rawDisplays.Select(d => IdentityAssignments.Resolve(d, settings.Assignments)).ToArray();
+            var ids = displays.Select(d => d.Id).ToHashSet(StringComparer.Ordinal);
+            foreach (var old in overlays.Where(o => !ids.Contains(o.Display.Id)).ToArray())
+            {
+                Check(DestroyWindow(old.Window));
+                overlays.Remove(old);
+            }
+            foreach (var display in displays)
+            {
+                var overlay = overlays.SingleOrDefault(o => o.Display.Id == display.Id);
+                var desired = 0;
+                if (overlay is null)
+                {
+                    var window = CreateWindowExW(OverlayStyle, className, "Shade overlay", 0x80000000,
+                        display.X, display.Y, display.Width, display.Height, 0, 0, GetModuleHandleW(null), 0);
+                    if (window == 0) throw new Win32Exception(Marshal.GetLastWin32Error());
+                    overlay = new(display, window);
+                    overlays.Add(overlay);
+                    Check(SetLayeredWindowAttributes(window, 0, 0, 2));
+                    if (display.CanRemember) desired = RememberedLevel(display.Id);
+                }
+                else
+                {
+                    desired = overlay.Level;
+                    if (unavailable && display.CanRemember) desired = RememberedLevel(display.Id);
+                    if (overlay.Display != display)
+                    {
+                        Check(SetWindowPos(overlay.Window, 0, display.X, display.Y, display.Width, display.Height, 0x0004 | 0x0010));
+                        overlay.Display = display;
+                    }
+                }
+                if (hotkeyAvailable) Apply(overlay, desired);
+                // Record geometry separately from identity. Never change the OS display configuration.
+                if (display.CanRemember && hotkeyAvailable) Remember(overlay);
+            }
+            unavailable = !hotkeyAvailable;
+            KillTimer(controller, 1);
+            status = hotkeyAvailable ? "Recovery: Ctrl+Alt+Shift+R restores every display. Display changes are automatic."
+                : "Recovery hotkey unavailable. Dimming disabled; release Ctrl+Alt+Shift+R and restart.";
+            ScheduleSave(); // Also preserves the duplicate-serial ledger.
+            Publish();
+        }
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
+        {
+            Restore();
+            unavailable = true;
+            status = "Display configuration is changing or unavailable. Shading paused; retrying automatically.";
+            // Only transient failure arms a retry timer; stable topology has no polling.
+            if (SetTimer(controller, 1, 1000, 0) == 0) throw new Win32Exception(Marshal.GetLastWin32Error());
+            Publish();
+        }
+    }
+
+    private int RememberedLevel(string id) => settings.Controls.TryGetValue(id, out var control)
+        ? control.EffectiveLevel(settings.GlobalLevel) : settings.Displays.GetValueOrDefault(id)?.Level ?? 0;
 
     private nint WindowProc(nint window, uint message, nuint wParam, nint lParam)
     {
         // Never let a managed exception cross the unmanaged callback boundary.
         if (message == 0x0312 && wParam == 1) restoreRequested = true; // WM_HOTKEY
-        if (message is 0x007e or 0x0218) topologyChanged = true; // display/power changes
+        if (window == controller && message is 0x007e or 0x0218 or 0x0219) topologyChanged = true; // display/power/device changes
         if (message == 0x0021) return 3; // MA_NOACTIVATE
         if (message == 0x0084 && window != controller) return -1; // HTTRANSPARENT
         return DefWindowProcW(window, message, wParam, lParam);
@@ -102,28 +287,19 @@ public sealed class WindowsDimmingBackend : IDimmingBackend
             if (SetThreadDpiAwarenessContext(-4) == 0) throw new Win32Exception(Marshal.GetLastWin32Error());
             var wc = new WindowClass
             {
-                Size = (uint)Marshal.SizeOf<WindowClass>(), Procedure = procedure,
-                Instance = instance, Background = GetStockObject(4), ClassName = className
+                Size = (uint)Marshal.SizeOf<WindowClass>(),
+                Procedure = procedure,
+                Instance = instance,
+                Background = GetStockObject(4),
+                ClassName = className
             };
             if (RegisterClassExW(ref wc) == 0) throw new Win32Exception(Marshal.GetLastWin32Error());
             registered = true;
             // Hidden top-level window receives display broadcasts; a message-only window would not.
             controller = CreateWindowExW(0x80, className, "Shade controller", 0x80000000, 0, 0, 0, 0, 0, 0, instance, 0);
             if (controller == 0) throw new Win32Exception(Marshal.GetLastWin32Error());
-            var displays = Enumerate();
-            if (displays.Count == 0) throw new InvalidOperationException("No active displays.");
-            foreach (var display in displays)
-            {
-                var window = CreateWindowExW(OverlayStyle, className, "Shade overlay", 0x80000000,
-                    display.X, display.Y, display.Width, display.Height, 0, 0, instance, 0);
-                if (window == 0) throw new Win32Exception(Marshal.GetLastWin32Error());
-                overlays.Add(new(display, window));
-                Check(SetLayeredWindowAttributes(window, 0, 0, 2));
-            }
-            Displays = displays.AsReadOnly();
-            unavailable = !RegisterHotKey(controller, 1, 0x4000 | 1 | 2 | 4, 0x52);
-            status = unavailable ? "Recovery hotkey unavailable. Dimming disabled; release Ctrl+Alt+Shift+R and restart."
-                : "Recovery: Ctrl+Alt+Shift+R restores every display.";
+            hotkeyAvailable = RegisterHotKey(controller, 1, 0x4000 | 1 | 2 | 4, recoveryKey);
+            Reconcile();
             ready.SetResult();
 
             // Blocking OS wait: no timer, polling, render loop or continuously uploaded bitmap.
@@ -136,11 +312,11 @@ public sealed class WindowsDimmingBackend : IDimmingBackend
                 if (topologyChanged)
                 {
                     topologyChanged = false;
-                    unavailable = true;
-                    Restore();
-                    status = "Display or power state changed. All displays restored; restart Shade to resume.";
+                    Reconcile();
                 }
-                if (restoreRequested) { restoreRequested = false; Restore(); }
+                if (restoreRequested) { restoreRequested = false; RestoreAndForgetLevels(); }
+                if (message.Id == 0x0113 && message.WParam == 1) Reconcile();
+                if (message.Id == 0x0113 && message.WParam == 2) Save();
                 if (message.Id == WorkMessage) DrainCommands();
             }
         }
@@ -163,29 +339,12 @@ public sealed class WindowsDimmingBackend : IDimmingBackend
                 DestroyWindow(overlay.Window);
                 Volatile.Write(ref overlay.Level, 0);
             }
+            Save();
+            Publish();
             if (controller != 0) { UnregisterHotKey(controller, 1); DestroyWindow(controller); }
             if (registered) UnregisterClassW(className, instance);
             GC.KeepAlive(procedure);
         }
-    }
-
-    private static List<Display> Enumerate()
-    {
-        List<Display> result = [];
-        var error = 0;
-        MonitorCallback callback = (nint monitor, nint dc, ref Rect rect, nint data) =>
-        {
-            var info = new MonitorInfo { Size = (uint)Marshal.SizeOf<MonitorInfo>(), Device = "" };
-            if (!GetMonitorInfoW(monitor, ref info)) { error = Marshal.GetLastWin32Error(); return false; }
-            var bounds = info.Monitor;
-            result.Add(new(info.Device, $"Display {result.Count + 1}" + ((info.Flags & 1) != 0 ? " (primary)" : ""),
-                bounds.Left, bounds.Top, bounds.Right - bounds.Left, bounds.Bottom - bounds.Top));
-            return true;
-        };
-        var success = EnumDisplayMonitors(0, 0, callback, 0);
-        if (error != 0) throw new Win32Exception(error);
-        Check(success);
-        return result;
     }
 
     private void Invoke(Action action)
@@ -213,7 +372,9 @@ public sealed class WindowsDimmingBackend : IDimmingBackend
                 if (ex is Win32Exception)
                 {
                     Restore(); unavailable = true;
-                    status = "Native overlay update failed. Displays restored; restart Shade.";
+                    status = "Native overlay update failed. Displays restored; retrying automatically.";
+                    SetTimer(controller, 1, 1000, 0);
+                    Publish();
                 }
                 work.Completion.SetException(ex);
             }
@@ -221,7 +382,7 @@ public sealed class WindowsDimmingBackend : IDimmingBackend
     }
 
     // Opt-in integration test examines owned windows without exposing monitor IDs or taking desktop captures.
-    public void VerifyNativeState() => Invoke(() =>
+    internal void VerifyNativeState() => Invoke(() =>
     {
         foreach (var o in overlays)
         {
@@ -237,10 +398,25 @@ public sealed class WindowsDimmingBackend : IDimmingBackend
         }
     });
 
+    internal void RefreshTopology()
+    {
+        Check(PostMessageW(controller, 0x007e, 0, 0));
+        Invoke(() => { }); // Queue barrier after WM_DISPLAYCHANGE processing.
+    }
+    internal void TriggerRecovery()
+    {
+        Check(PostMessageW(controller, 0x0312, 1, 0));
+        Invoke(() => { }); // Exercises the same message handler used by the registered recovery key.
+    }
+
     public void Dispose()
     {
-        lock (gate) { if (disposed) return; }
-        try { Invoke(() => stopping = true); }
+        try
+        {
+            bool alreadyStopped;
+            lock (gate) alreadyStopped = disposed || failure is not null;
+            if (!alreadyStopped) Invoke(() => stopping = true);
+        }
         catch (ObjectDisposedException) { }
         finally { thread.Join(); }
     }

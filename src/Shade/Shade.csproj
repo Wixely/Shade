@@ -1,9 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <PublishTrimmed Condition="'$(Trim)' == 'true'">true</PublishTrimmed>
+    <PublishAot Condition="'$(Aot)' == 'true'">true</PublishAot>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Trim)' == 'true'">
+    <!-- SDK 10 ILLink has no public item for external dependency annotations. -->
+    <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --link-attributes &quot;$(MSBuildProjectDirectory)/Silk.LinkAttributes.xml&quot;</_ExtraTrimmerArgs>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildProjectDirectory)/Silk.LinkAttributes.xml</MSBuildAllProjects>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="CupriFace" Version="[0.20.0]" />
-    <PackageReference Include="CupriFace.Shell" Version="[0.20.0]" />
+    <ProjectReference Include="../../third-party/CupriFace.Engine/Shade.CupriEngine.csproj" />
+    <ProjectReference Include="../../third-party/CupriFace.Shell/Shade.CupriHost.csproj" />
+    <PackageReference Include="MQTTnet" Version="5.2.0.1603" />
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.94.2" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
   </ItemGroup>
 </Project>

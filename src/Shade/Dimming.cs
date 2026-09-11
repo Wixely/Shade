@@ -1,7 +1,7 @@
 namespace Shade;
 
-// Display IDs are session-local. Persistence must use a separately verified identity strategy.
-public sealed record Display(string Id, string Label, int X, int Y, int Width, int Height);
+public sealed record Display(string Id, string Label, int X, int Y, int Width, int Height,
+    bool CanRemember = false, string IdentityNote = "Session identity; settings not remembered");
 
 public static class DimLevel
 {
@@ -15,7 +15,24 @@ public interface IDimmingBackend : IDisposable
 {
     IReadOnlyList<Display> Displays { get; }
     string Status { get; }
+    long Revision { get; }
+    long RestoreVersion { get; }
+    ControlPreferences? Preferences => null;
+    void SavePreferences(ControlPreferences preferences) { }
     int GetLevel(string id);
     void SetLevel(string id, int level);
+    void SetLevels(IReadOnlyDictionary<string, int> levels)
+    {
+        foreach (var level in levels) SetLevel(level.Key, level.Value);
+    }
     void RestoreAll();
+    bool SupportsAssignments => false;
+    IReadOnlyList<AssignmentChoice> Assignments => Array.Empty<AssignmentChoice>();
+    void AssignScreen(string connectionId, string name, string? existingId = null) => throw new NotSupportedException();
+    void DetachAssignment(string id) => throw new NotSupportedException();
+    bool SettingsNeedRecovery => false;
+    bool SettingsNeedBackup => false;
+    void RecoverSettings() => throw new NotSupportedException();
+    bool RecoverySetupNeeded => false;
+    void ConfigureRecovery() => throw new NotSupportedException();
 }

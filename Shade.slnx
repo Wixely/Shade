@@ -5,4 +5,9 @@
   <Folder Name="/tests/">
     <Project Path="tests/Shade.Tests/Shade.Tests.csproj" />
   </Folder>
+  <Folder Name="/third-party/">
+    <Project Path="third-party/CupriFace.Engine/Shade.CupriEngine.csproj" />
+    <Project Path="third-party/CupriFace.Engine/CupriFace.Binding.Gen/Shade.CupriGenerator.csproj" />
+    <Project Path="third-party/CupriFace.Shell/Shade.CupriHost.csproj" />
+  </Folder>
 </Solution>

@@ -5,5 +5,7 @@
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <!-- Cross-platform publish experiments must not replace the normal development lock. -->
+    <NuGetLockFilePath Condition="'$(RuntimeIdentifier)' != ''">$(MSBuildProjectDirectory)/obj/publish-locks/$(RuntimeIdentifier)/packages.lock.json</NuGetLockFilePath>
   </PropertyGroup>
 </Project>

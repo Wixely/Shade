@@ -1,4 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
   <ItemGroup><ProjectReference Include="../../src/Shade/Shade.csproj" /></ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MQTTnet.Server" Version="5.2.0.1603" />
+  </ItemGroup>
 </Project>
