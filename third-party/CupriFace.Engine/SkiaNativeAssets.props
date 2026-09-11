@@ -1,0 +1,30 @@
+<Project>
+  <!--
+    Portable native Skia + HarfBuzz binaries for all desktop RIDs. Referencing all three
+    (win/linux/osx) makes a single build run on any desktop OS and lets you cross-publish;
+    `dotnet publish -r <rid>` copies only the matching native. WebAssembly natives are
+    provided separately by SkiaSharp.Views.Blazor in the web host, so they are NOT here.
+
+    Imported by CupriFace (engine) and CupriFace.Shell. Keep versions in sync with the
+    managed SkiaSharp / SkiaSharp.HarfBuzz packages.
+
+    The -android condition below is DELIBERATELY LIMITED, and it is worth being honest about
+    what it does not do. It evaluates against the IMPORTING project's TargetFramework, so it
+    only helps a project that imports this file while targeting net10.0-android (none today).
+    It does NOT stop the transitive restore of these desktop packages into an Android app that
+    merely REFERENCES the engine — the engine itself builds as net10.0, so its dependency list
+    always carries them (the Android probe observed exactly that). That leak is restore-only
+    noise: RID-mismatched runtimes/<desktop-rid>/native assets cannot enter an APK, and the
+    Android CI gate asserts as much by listing the APK's contents. The real fix would be
+    multi-targeting the engine, which would tax every build everywhere with the android
+    workload for a wart with no shipped-bytes consequence.
+  -->
+  <ItemGroup Condition="!$(TargetFramework.Contains('-android'))">
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="3.116.1" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.116.1" />
+    <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.116.1" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Win32" Version="8.3.0.1" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="8.3.0.1" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.macOS" Version="8.3.0.1" />
+  </ItemGroup>
+</Project>

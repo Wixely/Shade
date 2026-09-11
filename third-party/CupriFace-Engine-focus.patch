@@ -1,0 +1,185 @@
+diff --git a/src/CupriFace/CupriDocument.cs b/src/CupriFace/CupriDocument.cs
+index fe35b3a..a8367d9 100644
+--- a/src/CupriFace/CupriDocument.cs
++++ b/src/CupriFace/CupriDocument.cs
+@@ -1802,7 +1802,20 @@ public sealed partial class CupriDocument : IDisposable
+         if (!_focusVisible || _kbIndex < 0) return;
+         var f = Focusables();
+         if (_kbIndex >= f.Count) return;
+-        var (x, y, w, h) = HitTesting.AbsoluteBox(f[_kbIndex]);
++        var focused = f[_kbIndex];
++        var (x, y, w, h) = HitTesting.ScreenBox(focused);
++        var clips = 0;
++        // Focus is painted after the main display list. Reapply ancestor clipping,
++        // stopping at top-layer boundaries just as the ordinary paint path does.
++        for (var child = focused; !child.IsTopLayer && child.Parent is { } parent; child = parent)
++        {
++            if (parent.Style.Overflow == OverflowMode.Visible) continue;
++            var box = HitTesting.ScreenBox(parent);
++            list.Add(new PushClip(box.X + parent.BorderLeftW, box.Y + parent.BorderTopW,
++                MathF.Max(0, box.W - parent.BorderLeftW - parent.BorderRightW),
++                MathF.Max(0, box.H - parent.BorderTopW - parent.BorderBottomW), parent.Style.BorderRadius));
++            clips++;
++        }
+         const float t = 2f, pad = 2f;                 // ring thickness + gap outside the border box
+         var (rx, ry, rw, rh) = (x - pad, y - pad, w + 2 * pad, h + 2 * pad);
+         var c = new SKColor(0x2F, 0x6F, 0xED);        // accessible focus blue
+@@ -1810,6 +1823,7 @@ public sealed partial class CupriDocument : IDisposable
+         list.Add(new FillRect(rx, ry + rh - t, rw, t, 0f, c));  // bottom
+         list.Add(new FillRect(rx, ry, t, rh, 0f, c));           // left
+         list.Add(new FillRect(rx + rw - t, ry, t, rh, 0f, c));  // right
++        while (clips-- > 0) list.Add(new PopClip());
+     }
+ 
+     private static RenderNode? FindFocused(RenderNode n)
+@@ -2334,8 +2348,15 @@ public sealed partial class CupriDocument : IDisposable
+     {
+         EnsureLaidOut();
+         if (NodeAtPath(path) is not { } n) return false;
+-        var (x, y) = HitTesting.ActivationPoint(n);   // inline-aware: a wrapped link's box centre
+-        return DispatchClick(x, y);                   // can sit between its lines
++        if (n.Element is { } el && IsDisabled(el)) return false;
++        RevealControl(path);
++        EnsureLaidOut();
++        if (NodeAtPath(path) is not { } target) return false;
++        var (x, y) = HitTesting.ActivationPoint(target);
++        // An inaccessible or occluded target must never click an unrelated control.
++        for (var hit = HitTesting.HitTest(_root, x, y); hit is not null; hit = hit.Parent)
++            if (ReferenceEquals(hit, target)) return DispatchClickCore(x, y, 1);
++        return false;
+ 
+     }
+ 
+@@ -2352,6 +2373,7 @@ public sealed partial class CupriDocument : IDisposable
+         var el = Focusables()[i].Element;
+         UpdateFocus(el?.GetAttribute("role") is "textbox" or "spinbutton" ? el : null);
+         Refresh();
++        RevealKeyboardFocus();
+         return true;
+     }
+ 
+@@ -2365,13 +2387,61 @@ public sealed partial class CupriDocument : IDisposable
+     {
+         EnsureLaidOut();
+         if (NodeAtPath(path)?.Element is not { } el) return false;
++        if (IsDisabled(el) || el.HasAttribute("readonly") || el.GetAttribute("aria-readonly") == "true") return false;
+         if (el.GetAttribute("data-bind-value") is not { Length: > 0 } bind) return false;
+         if (_model is null) return false;
+         if (!BindingEngine.TrySet(_model, bind, text)) return false;
++        if (_focusKey == bind)
++        {
++            // Autofill replaces the active editor too. Otherwise its old buffer
++            // paints over the new model value and commits that old value on blur.
++            _editBuffer = text;
++            _caret = _selAnchor = text.Length;
++            _caretMoved = true;
++            _compStart = -1; _compLen = 0; _compUndo = null;
++            _maskRevealPos = -1; _maskRevealStart = double.NaN;
++            _undo.Clear(); _redo.Clear(); _typingGroup = false;
++        }
+         Refresh();
+         return true;
+     }
+ 
++    /// <summary>Immutable ordinary editor state for accessibility bridges. Offsets are UTF-16;
++    /// null selection endpoints mean this field does not currently own the caret.</summary>
++    public readonly record struct AccessibleTextState(string Text, int? Anchor, int? Caret, bool ReadOnly);
++
++    /// <summary>Read on the document thread, then publish the immutable result to accessibility
++    /// clients. Passwords never expose their content through this API, even during character peek.</summary>
++    public AccessibleTextState? GetAccessibleTextState(string path)
++    {
++        EnsureLaidOut();
++        if (NodeAtPath(path) is not { Element: { } el } node || el.GetAttribute("role") != "textbox"
++            || el.HasAttribute("data-mask") || el.GetAttribute("data-bind-value") is not { Length: > 0 } bind
++            || _model is null) return null;
++        var focused = _focusKey == bind && ReferenceEquals(CurrentFocusNode(), node);
++        var text = focused ? _editBuffer ?? "" : BindingEngine.Resolve(_model, bind)?.ToString() ?? "";
++        return new(text, focused ? Math.Clamp(_selAnchor, 0, text.Length) : null,
++            focused ? Math.Clamp(_caret, 0, text.Length) : null,
++            IsDisabled(el) || el.HasAttribute("readonly") || el.GetAttribute("aria-readonly") == "true");
++    }
++
++    /// <summary>Select an ordinary editor range by path. Reject stale/out-of-range endpoints and
++    /// endpoints inside a surrogate pair. Read-only text remains selectable; disabled text does not.</summary>
++    public bool AccessibilitySelectText(string path, int anchor, int caret) => Bump(AccessibilitySelectTextCore(path, anchor, caret));
++
++    private bool AccessibilitySelectTextCore(string path, int anchor, int caret)
++    {
++        if (GetAccessibleTextState(path) is not { } state || NodeAtPath(path)?.Element is not { } el || IsDisabled(el)) return false;
++        static bool Boundary(string text, int offset) => offset >= 0 && offset <= text.Length
++            && !(offset > 0 && offset < text.Length && char.IsHighSurrogate(text[offset - 1]) && char.IsLowSurrogate(text[offset]));
++        if (!Boundary(state.Text, anchor) || !Boundary(state.Text, caret)) return false;
++        if (!AccessibilityFocusCore(path)) return false;
++        if (HasComposition) CommitCompositionCore(null);
++        if (GetAccessibleTextState(path) is not { } current || !Boundary(current.Text, anchor) || !Boundary(current.Text, caret)) return false;
++        SetTextSelectionCore(anchor, caret);
++        return true;
++    }
++
+     /// <summary>Set a slider's value directly — UIA RangeValue.SetValue. Clamps to min/max and writes
+     /// through the same binding a drag would, rounded the way a drag rounds.</summary>
+     public bool AccessibilitySetValue(string path, double value) => Bump(AccessibilitySetValueCore(path, value));
+@@ -2980,9 +3050,42 @@ public sealed partial class CupriDocument : IDisposable
+         var el = f[_kbIndex].Element;
+         UpdateFocus(el?.GetAttribute("role") is "textbox" or "spinbutton" ? el : null);
+         Refresh();
++        RevealKeyboardFocus();
+         return true;
+     }
+ 
++    private void RevealKeyboardFocus()
++    {
++        EnsureLaidOut();
++        if (CurrentFocusNode() is not { } focused) return;
++        RevealControl(PathOf(focused));
++    }
++
++    private void RevealControl(string target)
++    {
++        EnsureLaidOut();
++        if (NodeAtPath(target) is not { } focused) return;
++        var ancestors = new List<string>();
++        for (var child = focused; !child.IsTopLayer && child.Parent is { } parent; child = parent)
++            if (parent.IsScrollable || parent.IsScrollableX) ancestors.Add(PathOf(parent));
++        foreach (var path in ancestors)
++        {
++            EnsureLaidOut();
++            if (NodeAtPath(target) is not { } current || NodeAtPath(path) is not { } parent) continue;
++            var box = HitTesting.ScreenBox(current);
++            var viewport = HitTesting.ScreenBox(parent);
++            // Include the focus outline. Oversized controls align their leading edge.
++            static float Delta(float start, float size, float viewStart, float viewSize)
++            {
++                start -= 4; size += 8;
++                return start < viewStart ? start - viewStart : MathF.Max(0, MathF.Min(start - viewStart, start + size - viewStart - viewSize));
++            }
++            var dx = parent.IsScrollableX ? Delta(box.X, box.W, viewport.X + parent.ContentLeftInset, parent.ContentBoxWidth) : 0;
++            var dy = parent.IsScrollable ? Delta(box.Y, box.H, viewport.Y + parent.ContentTopInset, parent.ContentBoxHeight) : 0;
++            if (dx != 0 || dy != 0) ScrollCaptured(dy != 0 ? path : null, dx != 0 ? path : null, dy, dx);
++        }
++    }
++
+     // Activate the keyboard-focused control (Enter/Space) as if clicked at its centre.
+     private bool ActivateFocused()
+     {
+diff --git a/src/CupriFace/Accessibility/AccessibilityTree.cs b/src/CupriFace/Accessibility/AccessibilityTree.cs
+index 4fdc392..edbe471 100644
+--- a/src/CupriFace/Accessibility/AccessibilityTree.cs
++++ b/src/CupriFace/Accessibility/AccessibilityTree.cs
+@@ -242,6 +242,15 @@ public static class AccessibilityTree
+                 sem.Checked = el.GetAttribute("aria-checked") == "true";
+                 break;
+             case "textbox" or "combobox":
++                if (role == "textbox" && !el.HasAttribute("data-mask") && !el.HasAttribute("data-multiline")
++                    && el.QuerySelector("[data-caret-anchor]") is { } anchor)
++                {
++                    // Single-line fields keep their actual editor text in this
++                    // anchor. Render runs omit whitespace-only nodes; trimming
++                    // them also changes valid values. Placeholders are hints.
++                    sem.Value = anchor.ClassList.Contains("cupri-tf-ph") ? "" : anchor.TextContent;
++                    break;
++                }
+                 // The rendered text IS the live value (the per-keystroke rebuild writes the edit
+                 // buffer into the DOM, masked for passwords — so this never leaks one).
+                 var text = CollectText(render).Trim();

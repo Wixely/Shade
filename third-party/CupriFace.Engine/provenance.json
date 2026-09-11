@@ -1,0 +1,458 @@
+{
+    "upstream":  "https://github.com/Wixely/CupriFace",
+    "revision":  "56a9850decbb3e07b1cbd5f409f3d988e406b94b",
+    "patchVersion":  "0.20.0-shade.8",
+    "files":  [
+                  {
+                      "file":  "CupriFace/CupriApp.cs",
+                      "upstreamSha256":  "B9DB00FC3991DA86CD837908F0E2A89DD3545F1A60123ABF9A1128AD285EFB7C",
+                      "sha256":  "B9DB00FC3991DA86CD837908F0E2A89DD3545F1A60123ABF9A1128AD285EFB7C"
+                  },
+                  {
+                      "file":  "CupriFace/CupriDocument.cs",
+                      "upstreamSha256":  "8E6CB19EA076C4A91D2C5DF9B9BD9363A5568E1F6AA156C4749C1C24E1294872",
+                      "sha256":  "E8543D3E90EA78B7683E272DAFBDCF7E84722B5D262DA695747B48EAAF2E08F7"
+                  },
+                  {
+                      "file":  "CupriFace/CupriDocument.Debug.cs",
+                      "upstreamSha256":  "ED5B704268892A29816653DB015362822E8885B69EA1245CD769D49F2EEFA0A1",
+                      "sha256":  "ED5B704268892A29816653DB015362822E8885B69EA1245CD769D49F2EEFA0A1"
+                  },
+                  {
+                      "file":  "CupriFace/CupriDocument.Pointers.cs",
+                      "upstreamSha256":  "08DAA38A699AA15C14886BE9F3B8CD66507FAA5EC5613944BE3582BCFFF686A1",
+                      "sha256":  "08DAA38A699AA15C14886BE9F3B8CD66507FAA5EC5613944BE3582BCFFF686A1"
+                  },
+                  {
+                      "file":  "CupriFace/FieldValidation.cs",
+                      "upstreamSha256":  "95F152EE54AF90C86C6830B58D29B4EE38FFC7DE63229E57EAABD335A05D0BB0",
+                      "sha256":  "95F152EE54AF90C86C6830B58D29B4EE38FFC7DE63229E57EAABD335A05D0BB0"
+                  },
+                  {
+                      "file":  "CupriFace/Accessibility/AccessibilityBridge.cs",
+                      "upstreamSha256":  "DDAA1A5203E482D1245015C405CA60B9347D1AEE707BC0FEAC9A28E97D62EA76",
+                      "sha256":  "DDAA1A5203E482D1245015C405CA60B9347D1AEE707BC0FEAC9A28E97D62EA76"
+                  },
+                  {
+                      "file":  "CupriFace/Accessibility/AccessibilityTree.cs",
+                      "upstreamSha256":  "7EAB39506A270FD6A06DB4883CB86E7F1B6F9DD43ED71C708E96D1FDBC8E196A",
+                      "sha256":  "7821BFDDE3CF32C56B947BB53DC6E82FD25DE316739770127FEBC2863FAE55D1"
+                  },
+                  {
+                      "file":  "CupriFace/Accessibility/AriaHtml.cs",
+                      "upstreamSha256":  "9E1FB1F2ECD24EEFF1AAE33951F631B61995A31875907A5D9C683FE340EA61CF",
+                      "sha256":  "9E1FB1F2ECD24EEFF1AAE33951F631B61995A31875907A5D9C683FE340EA61CF"
+                  },
+                  {
+                      "file":  "CupriFace/Binding/Bindable.cs",
+                      "upstreamSha256":  "ECE57F04067BA88570794AC52B7EC628D39243545C901B93FC767BA068699EA5",
+                      "sha256":  "ECE57F04067BA88570794AC52B7EC628D39243545C901B93FC767BA068699EA5"
+                  },
+                  {
+                      "file":  "CupriFace/Binding/BindingEngine.cs",
+                      "upstreamSha256":  "03B8B371C38D1DAA7948040F53C9414670D0A7DA9CDC7C6155FFD7BEFA115C63",
+                      "sha256":  "03B8B371C38D1DAA7948040F53C9414670D0A7DA9CDC7C6155FFD7BEFA115C63"
+                  },
+                  {
+                      "file":  "CupriFace/Components/ComponentRegistry.cs",
+                      "upstreamSha256":  "158F59DCD07A39E015EB88061A0FFE8956CC9EF5466BC463E0D423ACCF4B2E94",
+                      "sha256":  "158F59DCD07A39E015EB88061A0FFE8956CC9EF5466BC463E0D423ACCF4B2E94"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Icons.cs",
+                      "upstreamSha256":  "6BDA8095FC028E77A6A288DEEFF8A0417A0DE959C6897AC61688FEF51E76D0AD",
+                      "sha256":  "6BDA8095FC028E77A6A288DEEFF8A0417A0DE959C6897AC61688FEF51E76D0AD"
+                  },
+                  {
+                      "file":  "CupriFace/Components/ICupriComponent.cs",
+                      "upstreamSha256":  "C30E6814FC8E5763F32A825F71EE27EB26BFD9224F0557AD1DBEE43805A9F76B",
+                      "sha256":  "C30E6814FC8E5763F32A825F71EE27EB26BFD9224F0557AD1DBEE43805A9F76B"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/BadgeComponent.cs",
+                      "upstreamSha256":  "486BFCBC92325FF04D1D1454D2A1F16A228595029527661A198FE9971F67AC0A",
+                      "sha256":  "486BFCBC92325FF04D1D1454D2A1F16A228595029527661A198FE9971F67AC0A"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/BreadcrumbControls.cs",
+                      "upstreamSha256":  "BDC58CFF5BD730DE75585702EB2BB73084C0E2F59D77FC89D150E5C6A598E015",
+                      "sha256":  "BDC58CFF5BD730DE75585702EB2BB73084C0E2F59D77FC89D150E5C6A598E015"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/ButtonComponent.cs",
+                      "upstreamSha256":  "40D1BC174ABAF6E64BF77025E02FE22F20B830380D7958941FD8F48434D24972",
+                      "sha256":  "40D1BC174ABAF6E64BF77025E02FE22F20B830380D7958941FD8F48434D24972"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/CarouselComponent.cs",
+                      "upstreamSha256":  "2614038568CF4F23B0F102B7521E6B18548E6C57C229AE0C016C5CA16A2EE97C",
+                      "sha256":  "2614038568CF4F23B0F102B7521E6B18548E6C57C229AE0C016C5CA16A2EE97C"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/ChartControls.cs",
+                      "upstreamSha256":  "B9071C0655E93A8AAC36DEC0ADF337100F46586946C1A296ACC1260941945DD9",
+                      "sha256":  "B9071C0655E93A8AAC36DEC0ADF337100F46586946C1A296ACC1260941945DD9"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/ColorComponent.cs",
+                      "upstreamSha256":  "4A0F162CEA78F9C41FC76BB46DEEB5AACB010044DE5E9765EC3F40106E34F255",
+                      "sha256":  "4A0F162CEA78F9C41FC76BB46DEEB5AACB010044DE5E9765EC3F40106E34F255"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/ComboboxComponent.cs",
+                      "upstreamSha256":  "5B24BA80B74FF6F0036213DFBDB00D4D8A986B451DDFCB771648B83771EC343B",
+                      "sha256":  "5B24BA80B74FF6F0036213DFBDB00D4D8A986B451DDFCB771648B83771EC343B"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/CommandPaletteComponent.cs",
+                      "upstreamSha256":  "2762A93F12B448865E085F4CA8501EF1E64B64E39AE25FAFEB4A16C87C3564BD",
+                      "sha256":  "2762A93F12B448865E085F4CA8501EF1E64B64E39AE25FAFEB4A16C87C3564BD"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/DatePickerComponent.cs",
+                      "upstreamSha256":  "D2889FCF9781C7B600DDC0D97B090BD6BA5E0743712D54800824701E85C15F01",
+                      "sha256":  "D2889FCF9781C7B600DDC0D97B090BD6BA5E0743712D54800824701E85C15F01"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/DisplayControls.cs",
+                      "upstreamSha256":  "AEB4B8281BA2E19DB6B61B1126E9237036B66758B957067A58C429DBE181C169",
+                      "sha256":  "AEB4B8281BA2E19DB6B61B1126E9237036B66758B957067A58C429DBE181C169"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/FeedbackControls.cs",
+                      "upstreamSha256":  "D540EACAF162E018E04561F0689778D49209888376ACCB016B99684770678EA8",
+                      "sha256":  "D540EACAF162E018E04561F0689778D49209888376ACCB016B99684770678EA8"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/FormComponent.cs",
+                      "upstreamSha256":  "507C7092BBD8E11CE1DCCF07D86193F51C45964A7C5EEF2C1FAD7D14B3430344",
+                      "sha256":  "507C7092BBD8E11CE1DCCF07D86193F51C45964A7C5EEF2C1FAD7D14B3430344"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/FormControls.cs",
+                      "upstreamSha256":  "3403E10605D20A4B7ABA81458AA6BC814F00C710200FF34A1D2FA5F63341DE3B",
+                      "sha256":  "3403E10605D20A4B7ABA81458AA6BC814F00C710200FF34A1D2FA5F63341DE3B"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/IconComponent.cs",
+                      "upstreamSha256":  "1CB6B0224B3AD9114B99398F84BB5C868A06676BCE1BD3A59FEC63FBD1FE2CDA",
+                      "sha256":  "1CB6B0224B3AD9114B99398F84BB5C868A06676BCE1BD3A59FEC63FBD1FE2CDA"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/ImageComponent.cs",
+                      "upstreamSha256":  "585406C036693524F8A9F759023001DE89E76DC080163C7976C7D517145548F8",
+                      "sha256":  "585406C036693524F8A9F759023001DE89E76DC080163C7976C7D517145548F8"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/MarkdownComponent.cs",
+                      "upstreamSha256":  "A50AFA4075DA169453178C1B219E3A6C457900C6C6CE552D6C73A13F40F83E70",
+                      "sha256":  "A50AFA4075DA169453178C1B219E3A6C457900C6C6CE552D6C73A13F40F83E70"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/MoreOverlays.cs",
+                      "upstreamSha256":  "EA84B9765CB3D6DD03E6FB2AC342302A965D969CF729E40F4D40A65002C2D4E7",
+                      "sha256":  "EA84B9765CB3D6DD03E6FB2AC342302A965D969CF729E40F4D40A65002C2D4E7"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/NavControls.cs",
+                      "upstreamSha256":  "3355F250F0BFCCCF3EFA8A5FDE4287127B2DB87356E1184D714E565B93D3B088",
+                      "sha256":  "3355F250F0BFCCCF3EFA8A5FDE4287127B2DB87356E1184D714E565B93D3B088"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/NumberFieldComponent.cs",
+                      "upstreamSha256":  "84B572C1E08C6EC11786502E265AC7777937E9AA9A39973C58C285DC460300B2",
+                      "sha256":  "84B572C1E08C6EC11786502E265AC7777937E9AA9A39973C58C285DC460300B2"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/OverlayControls.cs",
+                      "upstreamSha256":  "60FCA6D8B844A464A8E949FF76D4033C198FEBA36D07434340CA29B309F21A00",
+                      "sha256":  "60FCA6D8B844A464A8E949FF76D4033C198FEBA36D07434340CA29B309F21A00"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/PaginationComponent.cs",
+                      "upstreamSha256":  "3B88529E50DBB15AC10A074065B27751E7DA41170F03C1B1A15A631691031B55",
+                      "sha256":  "3B88529E50DBB15AC10A074065B27751E7DA41170F03C1B1A15A631691031B55"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/PasswordFieldComponent.cs",
+                      "upstreamSha256":  "B97595040C8A855A959349714DC4F907497C997F1236969ECB72FCBD1E7391AB",
+                      "sha256":  "B97595040C8A855A959349714DC4F907497C997F1236969ECB72FCBD1E7391AB"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/PopupControls.cs",
+                      "upstreamSha256":  "EC94684A5BFC002BCAD498B7FDBD46811DF3E466C38150DD0DD8BB166903F436",
+                      "sha256":  "EC94684A5BFC002BCAD498B7FDBD46811DF3E466C38150DD0DD8BB166903F436"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/ProgressComponent.cs",
+                      "upstreamSha256":  "78F121D307EF691748FE323DB157806841995313A9CDA34C84C1298320262CE0",
+                      "sha256":  "78F121D307EF691748FE323DB157806841995313A9CDA34C84C1298320262CE0"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/RangeComponent.cs",
+                      "upstreamSha256":  "315A42EF30C423E49BC56E734F14EC7649D65B7DCA9E3ED9017888DAA1A46710",
+                      "sha256":  "315A42EF30C423E49BC56E734F14EC7649D65B7DCA9E3ED9017888DAA1A46710"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/RatingComponent.cs",
+                      "upstreamSha256":  "9DE233BFB66D36E5725864A31D09260152110018CB96783CE206DC34928FD416",
+                      "sha256":  "9DE233BFB66D36E5725864A31D09260152110018CB96783CE206DC34928FD416"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/SearchFieldComponent.cs",
+                      "upstreamSha256":  "B6CA05F046147CC45DCF28E143AB10BF24D7ECCA6A729CAA3F7EBF94AC777FBE",
+                      "sha256":  "B6CA05F046147CC45DCF28E143AB10BF24D7ECCA6A729CAA3F7EBF94AC777FBE"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/SegmentedComponent.cs",
+                      "upstreamSha256":  "36621B4D7B9E21A1B41F1D4E18F2C7565D70020CCA1234FC288637D8B1D126D4",
+                      "sha256":  "36621B4D7B9E21A1B41F1D4E18F2C7565D70020CCA1234FC288637D8B1D126D4"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/SliderComponent.cs",
+                      "upstreamSha256":  "F70E50FD34204F5D85202B0FFADA2CC4E976F936829F338755DCBA2B56D9EC0D",
+                      "sha256":  "F70E50FD34204F5D85202B0FFADA2CC4E976F936829F338755DCBA2B56D9EC0D"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/SplitComponent.cs",
+                      "upstreamSha256":  "78D450120BE22570AD1C117CB18021C975366301869448CBC1CD8717B246C411",
+                      "sha256":  "78D450120BE22570AD1C117CB18021C975366301869448CBC1CD8717B246C411"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/SwitchComponent.cs",
+                      "upstreamSha256":  "1A096D5E06EB2C882BA95A9C62E9C8E99636E7C1B362CE402DB658071F50F40E",
+                      "sha256":  "1A096D5E06EB2C882BA95A9C62E9C8E99636E7C1B362CE402DB658071F50F40E"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/TableControls.cs",
+                      "upstreamSha256":  "4E82C614DD54C2D3980BACF144042D1CD737ED83E8BD9F0F32BF55936CBEE1C8",
+                      "sha256":  "4E82C614DD54C2D3980BACF144042D1CD737ED83E8BD9F0F32BF55936CBEE1C8"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/TagInputComponent.cs",
+                      "upstreamSha256":  "294B831DD0CD54D98636C5108031AD489B4A8BD73FC77FB4817502CBDCAF8FCA",
+                      "sha256":  "294B831DD0CD54D98636C5108031AD489B4A8BD73FC77FB4817502CBDCAF8FCA"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/TextAreaComponent.cs",
+                      "upstreamSha256":  "65625E1F1F32263AA35954BFC8C2F7CE7D3E96296FFD3C765A8AD27263D86136",
+                      "sha256":  "65625E1F1F32263AA35954BFC8C2F7CE7D3E96296FFD3C765A8AD27263D86136"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/TextFieldComponent.cs",
+                      "upstreamSha256":  "48766F7EC709754424D34D1122BC92E7C30290BB915A143A4489CF29D155E596",
+                      "sha256":  "48766F7EC709754424D34D1122BC92E7C30290BB915A143A4489CF29D155E596"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/TimePickerComponent.cs",
+                      "upstreamSha256":  "DAEAB91F843FC49C8EB911F51D252DB56333D7131C62DB390A62B89189B8900C",
+                      "sha256":  "DAEAB91F843FC49C8EB911F51D252DB56333D7131C62DB390A62B89189B8900C"
+                  },
+                  {
+                      "file":  "CupriFace/Components/Controls/VideoComponent.cs",
+                      "upstreamSha256":  "D7FA7D1E749B8F409521B5ABD8C5120B1DF7EA39525030EE973B22C32405FDFD",
+                      "sha256":  "D7FA7D1E749B8F409521B5ABD8C5120B1DF7EA39525030EE973B22C32405FDFD"
+                  },
+                  {
+                      "file":  "CupriFace/Dom/RenderNode.cs",
+                      "upstreamSha256":  "464C8E16F85B38CED5C3F87FE32E1AAB3F0A77E1D8B957CE7566CE03D5EB7DB2",
+                      "sha256":  "464C8E16F85B38CED5C3F87FE32E1AAB3F0A77E1D8B957CE7566CE03D5EB7DB2"
+                  },
+                  {
+                      "file":  "CupriFace/Interaction/ContextCommand.cs",
+                      "upstreamSha256":  "8CF31BA54DAB01FEE7E4B81CA054A90C7F603E35E148295BD2FC266FA9279C0C",
+                      "sha256":  "8CF31BA54DAB01FEE7E4B81CA054A90C7F603E35E148295BD2FC266FA9279C0C"
+                  },
+                  {
+                      "file":  "CupriFace/Interaction/CupriPointerEvent.cs",
+                      "upstreamSha256":  "3E1DF3D62FD939A888CAE3C65B6CCA01F180E01772C8226192054F6EE6D464B0",
+                      "sha256":  "3E1DF3D62FD939A888CAE3C65B6CCA01F180E01772C8226192054F6EE6D464B0"
+                  },
+                  {
+                      "file":  "CupriFace/Interaction/EditKey.cs",
+                      "upstreamSha256":  "4879489BE7629AF7A78E9B45533AD9472F19915A1236E6E979522FE59D7C044E",
+                      "sha256":  "4879489BE7629AF7A78E9B45533AD9472F19915A1236E6E979522FE59D7C044E"
+                  },
+                  {
+                      "file":  "CupriFace/Interaction/ExternalLinkPolicy.cs",
+                      "upstreamSha256":  "039EE9EE76A612348EE47B958483E338A0E2FA9704428567732DA5D5EF68D623",
+                      "sha256":  "039EE9EE76A612348EE47B958483E338A0E2FA9704428567732DA5D5EF68D623"
+                  },
+                  {
+                      "file":  "CupriFace/Interaction/HitTesting.cs",
+                      "upstreamSha256":  "8D4BA70DF71005DF32D4F5D191CD8B4FF76065F12A16C28D6A23910873948CC5",
+                      "sha256":  "8D4BA70DF71005DF32D4F5D191CD8B4FF76065F12A16C28D6A23910873948CC5"
+                  },
+                  {
+                      "file":  "CupriFace/Interaction/InputProfile.cs",
+                      "upstreamSha256":  "1D66E960A6B321EFB1E8B064DE35394E253A56A608F25661ED298CF145FFB02F",
+                      "sha256":  "1D66E960A6B321EFB1E8B064DE35394E253A56A608F25661ED298CF145FFB02F"
+                  },
+                  {
+                      "file":  "CupriFace/Interaction/ManipulationEvent.cs",
+                      "upstreamSha256":  "761BB40F256C4049B8582A7728CDD9EA03800F100DE98537716B3600894F4C99",
+                      "sha256":  "761BB40F256C4049B8582A7728CDD9EA03800F100DE98537716B3600894F4C99"
+                  },
+                  {
+                      "file":  "CupriFace/Interaction/MultiPointerEvent.cs",
+                      "upstreamSha256":  "970F5356E6B939DD8039F631EEF9021836510ACD857B45D4D7300F4D681F7357",
+                      "sha256":  "970F5356E6B939DD8039F631EEF9021836510ACD857B45D4D7300F4D681F7357"
+                  },
+                  {
+                      "file":  "CupriFace/Interaction/TextInputState.cs",
+                      "upstreamSha256":  "D0ED4BFEEF55A5D50E6CA67B1DE826694F9A9F976162837AB50B3D3871AAFA4F",
+                      "sha256":  "D0ED4BFEEF55A5D50E6CA67B1DE826694F9A9F976162837AB50B3D3871AAFA4F"
+                  },
+                  {
+                      "file":  "CupriFace/Interaction/TouchInput.cs",
+                      "upstreamSha256":  "16B7DA90D43998ED5CA5FD73BF72300D90491148EF740A0578E9DBD0E90DB8E5",
+                      "sha256":  "16B7DA90D43998ED5CA5FD73BF72300D90491148EF740A0578E9DBD0E90DB8E5"
+                  },
+                  {
+                      "file":  "CupriFace/Interaction/WindowCommand.cs",
+                      "upstreamSha256":  "1A305D7C5639D2DE8010E0A97F0573A476DDA2C282DD832C15B3757ED2EB50FB",
+                      "sha256":  "1A305D7C5639D2DE8010E0A97F0573A476DDA2C282DD832C15B3757ED2EB50FB"
+                  },
+                  {
+                      "file":  "CupriFace/Layout/LayoutEngine.cs",
+                      "upstreamSha256":  "4ECBCBC51F6D071F5603D64113454F4E43FF993D8F98E7C033B057D8843FA257",
+                      "sha256":  "4ECBCBC51F6D071F5603D64113454F4E43FF993D8F98E7C033B057D8843FA257"
+                  },
+                  {
+                      "file":  "CupriFace/Media/IVideoBackend.cs",
+                      "upstreamSha256":  "5552068EA42EE51B091C221231F2AAA7725C1B6965B4E516C4532908972FCECE",
+                      "sha256":  "5552068EA42EE51B091C221231F2AAA7725C1B6965B4E516C4532908972FCECE"
+                  },
+                  {
+                      "file":  "CupriFace/Paint/DamageDiff.cs",
+                      "upstreamSha256":  "2A37402EE0A490DC35D950F476327E2CED4CDF29B7309F39350F7318E318A946",
+                      "sha256":  "2A37402EE0A490DC35D950F476327E2CED4CDF29B7309F39350F7318E318A946"
+                  },
+                  {
+                      "file":  "CupriFace/Paint/DisplayList.cs",
+                      "upstreamSha256":  "6A5BE0A8F056D7B8780F8EFE9F16D51AC632626AFC81207F865C69E18DAF26BD",
+                      "sha256":  "6A5BE0A8F056D7B8780F8EFE9F16D51AC632626AFC81207F865C69E18DAF26BD"
+                  },
+                  {
+                      "file":  "CupriFace/Paint/ImageStore.cs",
+                      "upstreamSha256":  "AEF85982F6BED91766EE2508E35D72508EF352666B5DA83C6DF3A91DAC66CCF6",
+                      "sha256":  "AEF85982F6BED91766EE2508E35D72508EF352666B5DA83C6DF3A91DAC66CCF6"
+                  },
+                  {
+                      "file":  "CupriFace/Paint/Painter.cs",
+                      "upstreamSha256":  "62BDCC7E5FE1F45DAA9F0CF9295C010244E54D281DD4BA5DB65DBDA4DE967020",
+                      "sha256":  "62BDCC7E5FE1F45DAA9F0CF9295C010244E54D281DD4BA5DB65DBDA4DE967020"
+                  },
+                  {
+                      "file":  "CupriFace/Paint/SkiaRasterizer.cs",
+                      "upstreamSha256":  "468E26827E45C270BB7B592F54031B7360A1089D6F8EF98622785C221A847A51",
+                      "sha256":  "468E26827E45C270BB7B592F54031B7360A1089D6F8EF98622785C221A847A51"
+                  },
+                  {
+                      "file":  "CupriFace/Paint/SurfaceRegistry.cs",
+                      "upstreamSha256":  "F2EA76B71E2EFEDAEFB8D36B0A77519D87D947A42C779A404538AFEA5F04380D",
+                      "sha256":  "F2EA76B71E2EFEDAEFB8D36B0A77519D87D947A42C779A404538AFEA5F04380D"
+                  },
+                  {
+                      "file":  "CupriFace/Resources/CupriResourceException.cs",
+                      "upstreamSha256":  "3FEE6924D9E70405982B7959DC737A0EC273A9E09EDFB0F0550873473D486EA6",
+                      "sha256":  "3FEE6924D9E70405982B7959DC737A0EC273A9E09EDFB0F0550873473D486EA6"
+                  },
+                  {
+                      "file":  "CupriFace/Resources/CupriSource.cs",
+                      "upstreamSha256":  "AC63F57EDE27431C54ED472514F2768D7C2C46340E899C4D265919AA2DDFBF20",
+                      "sha256":  "AC63F57EDE27431C54ED472514F2768D7C2C46340E899C4D265919AA2DDFBF20"
+                  },
+                  {
+                      "file":  "CupriFace/Resources/CupriSourceOptions.cs",
+                      "upstreamSha256":  "A84D0826327ECAA624F1EFB5AEA08311EAAC9C88E3472C69B0852A6C4285B63B",
+                      "sha256":  "A84D0826327ECAA624F1EFB5AEA08311EAAC9C88E3472C69B0852A6C4285B63B"
+                  },
+                  {
+                      "file":  "CupriFace/Resources/SourceResolver.cs",
+                      "upstreamSha256":  "DE63EA48E420F85D483BA7E482DEA3E1E1734AD5378E5D06CD202D7979F0B1A2",
+                      "sha256":  "DE63EA48E420F85D483BA7E482DEA3E1E1734AD5378E5D06CD202D7979F0B1A2"
+                  },
+                  {
+                      "file":  "CupriFace/Style/Animation.cs",
+                      "upstreamSha256":  "0EF2929B50A56A5C2D5E658FA40AED4384DB8C0F0954C01F278D2652D780BC89",
+                      "sha256":  "0EF2929B50A56A5C2D5E658FA40AED4384DB8C0F0954C01F278D2652D780BC89"
+                  },
+                  {
+                      "file":  "CupriFace/Style/ComputedStyle.cs",
+                      "upstreamSha256":  "12A44969C0C7833198959AFD7CFE6A87420718FBBEFE07058C4F4F3B522966FE",
+                      "sha256":  "12A44969C0C7833198959AFD7CFE6A87420718FBBEFE07058C4F4F3B522966FE"
+                  },
+                  {
+                      "file":  "CupriFace/Style/CssNumber.cs",
+                      "upstreamSha256":  "6192F213F47173717124490CC5D1FFE2965F38A332331ACAEA5C2E6337E3CB95",
+                      "sha256":  "6192F213F47173717124490CC5D1FFE2965F38A332331ACAEA5C2E6337E3CB95"
+                  },
+                  {
+                      "file":  "CupriFace/Style/CssParser.cs",
+                      "upstreamSha256":  "C8B864D94AEBD0B26850BB475BCE5BB4272BB0D3E5181628AF3A5BF3BC2C491E",
+                      "sha256":  "C8B864D94AEBD0B26850BB475BCE5BB4272BB0D3E5181628AF3A5BF3BC2C491E"
+                  },
+                  {
+                      "file":  "CupriFace/Style/FontFace.cs",
+                      "upstreamSha256":  "7757B4DA49AB89F05DA946EC4F030663B33FECC4C191132A801907008799B487",
+                      "sha256":  "7757B4DA49AB89F05DA946EC4F030663B33FECC4C191132A801907008799B487"
+                  },
+                  {
+                      "file":  "CupriFace/Style/StyleResolver.cs",
+                      "upstreamSha256":  "981D3DEB50BD7AD0F5083E154E77517CD9EF0C77736EF7C07C83C6B9E3A592E7",
+                      "sha256":  "981D3DEB50BD7AD0F5083E154E77517CD9EF0C77736EF7C07C83C6B9E3A592E7"
+                  },
+                  {
+                      "file":  "CupriFace/Style/Transitions.cs",
+                      "upstreamSha256":  "8D3B45AF3E2B252C9D2ADA1E6CDD9700261F38F7A900B9DA05BDA607A0113219",
+                      "sha256":  "8D3B45AF3E2B252C9D2ADA1E6CDD9700261F38F7A900B9DA05BDA607A0113219"
+                  },
+                  {
+                      "file":  "CupriFace/Style/Values.cs",
+                      "upstreamSha256":  "35DAB099485E475B0065DD04217C27B2DE1BED22246D018630A7ACE71723BEC1",
+                      "sha256":  "35DAB099485E475B0065DD04217C27B2DE1BED22246D018630A7ACE71723BEC1"
+                  },
+                  {
+                      "file":  "CupriFace/Text/Bidi.cs",
+                      "upstreamSha256":  "53F486F0A3BABFEC33092114F3254D26DE1BD398DE6D1EE5CA04766AA653D70C",
+                      "sha256":  "53F486F0A3BABFEC33092114F3254D26DE1BD398DE6D1EE5CA04766AA653D70C"
+                  },
+                  {
+                      "file":  "CupriFace/Text/FontReport.cs",
+                      "upstreamSha256":  "7FE8CD20102DA5167226E1B1B8628218A78BB0FE961C438096DAD918BF701552",
+                      "sha256":  "7FE8CD20102DA5167226E1B1B8628218A78BB0FE961C438096DAD918BF701552"
+                  },
+                  {
+                      "file":  "CupriFace/Text/FontService.cs",
+                      "upstreamSha256":  "9D8E2AF684BB25D0BD7DA832712BD29E88DB93FF4CC81809398C043EC6C53152",
+                      "sha256":  "9D8E2AF684BB25D0BD7DA832712BD29E88DB93FF4CC81809398C043EC6C53152"
+                  },
+                  {
+                      "file":  "CupriFace/Text/Woff.cs",
+                      "upstreamSha256":  "FD6CA510223B9B64D67BC60670E617B084D75C621A7C00A26130BDE8DE328330",
+                      "sha256":  "FD6CA510223B9B64D67BC60670E617B084D75C621A7C00A26130BDE8DE328330"
+                  },
+                  {
+                      "file":  "CupriFace/Threading/ThreadedPresenter.cs",
+                      "upstreamSha256":  "47F04C7635D14FFB55DD3B3ED4EE137302B65FC4DB3B8CDF3E98987B2F11770B",
+                      "sha256":  "47F04C7635D14FFB55DD3B3ED4EE137302B65FC4DB3B8CDF3E98987B2F11770B"
+                  },
+                  {
+                      "file":  "CupriFace/Threading/ThreadedRenderer.cs",
+                      "upstreamSha256":  "A2EF945B5245D3206D37036C1FADA039FBB347FC81BC6A47BB47B852E294F370",
+                      "sha256":  "A2EF945B5245D3206D37036C1FADA039FBB347FC81BC6A47BB47B852E294F370"
+                  },
+                  {
+                      "file":  "CupriFace.Binding.Gen/BindableGenerator.cs",
+                      "upstreamSha256":  "23991E02DF5E48941C3C243154ED9D6B2016E746CCE46E713F03923F01DCF973",
+                      "sha256":  "23991E02DF5E48941C3C243154ED9D6B2016E746CCE46E713F03923F01DCF973"
+                  },
+                  {
+                      "file":  "SkiaNativeAssets.props",
+                      "upstreamSha256":  "5062D1C003D35D600D515234F6A055A0A6562A77B96EFAA7C55D243712FC76D9",
+                      "sha256":  "5062D1C003D35D600D515234F6A055A0A6562A77B96EFAA7C55D243712FC76D9"
+                  }
+              ],
+    "archiveSha256":  "20EF2397697E2FCAF61071B00D33895DF113D97DBCADCDD60F473EEE96BBED88"
+}

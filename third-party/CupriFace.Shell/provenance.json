@@ -1,0 +1,108 @@
+﻿{
+    "upstream":  "https://github.com/Wixely/CupriFace",
+    "revision":  "56a9850decbb3e07b1cbd5f409f3d988e406b94b",
+    "archiveSha256":  "20EF2397697E2FCAF61071B00D33895DF113D97DBCADCDD60F473EEE96BBED88",
+    "patchVersion":  "0.20.0-shade.8",
+    "files":  [
+                  {
+                      "file":  "CupriFace.Hosting/HostScale.cs",
+                      "upstreamSha256":  "B159FCDE99B473AE404F2C938838F74A02750614DB7A2ECA28106836F1DC0D5F",
+                      "sha256":  "B159FCDE99B473AE404F2C938838F74A02750614DB7A2ECA28106836F1DC0D5F"
+                  },
+                  {
+                      "file":  "CupriFace.Hosting/WindowScaleTracker.cs",
+                      "upstreamSha256":  "D7C60971DC47D98C4518DE7272358B9D46B8E1EB042E1D64C5B343BD282B779A",
+                      "sha256":  "D7C60971DC47D98C4518DE7272358B9D46B8E1EB042E1D64C5B343BD282B779A"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/Accessibility/AtSpi.cs",
+                      "upstreamSha256":  "435E9E491BBAD2BE42B6BE44AD18532159907237A2A7A8DACF764AEC35A8C322",
+                      "sha256":  "1CE7485815613444D599DF1AD5F50B7E7AE00E54EBFA744A3EC3504261AC40B0"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/Accessibility/AtSpiBridge.cs",
+                      "upstreamSha256":  "A33DFCA0F7A1374151692917C52AF905E07E245981E145C3839F56FA6D81ECA0",
+                      "sha256":  "A060CE81A723E122666E121C2155181563A3E530E12A40CE971D10DCCB26086C"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/Accessibility/NsAccessibility.cs",
+                      "upstreamSha256":  "DC1016FE1B22EC27A4DDD537E16563090A8301E4F2ABF201F10B94930CE1DFCE",
+                      "sha256":  "DC1016FE1B22EC27A4DDD537E16563090A8301E4F2ABF201F10B94930CE1DFCE"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/Accessibility/NsAccessibilityBridge.cs",
+                      "upstreamSha256":  "E1D950BBBB132A3CF2BD279F18D465EA3920E7BF2F70395FDA962A425EF9203D",
+                      "sha256":  "E1D950BBBB132A3CF2BD279F18D465EA3920E7BF2F70395FDA962A425EF9203D"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/Accessibility/ObjC.cs",
+                      "upstreamSha256":  "0FA68961FD97EBB69FFB07B7DAE188B745C9C36DA5FBE0F86970A835A3184E58",
+                      "sha256":  "0FA68961FD97EBB69FFB07B7DAE188B745C9C36DA5FBE0F86970A835A3184E58"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/Accessibility/PlatformAccessibility.cs",
+                      "upstreamSha256":  "2907091ECC1EF77680045000ADB9FAB488F8F9F19E3877049ED6CAA4C50AED98",
+                      "sha256":  "2907091ECC1EF77680045000ADB9FAB488F8F9F19E3877049ED6CAA4C50AED98"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/Accessibility/UiaBridge.cs",
+                      "upstreamSha256":  "42F7EF7488DA04649E0D76A61E518DE4E41851C39C65346E71CED75EAF877B50",
+                      "sha256":  "A2664BE695DB54F9D195E5F42225088CDB8883B0F32AF09095B0CDF2946C2921"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/Accessibility/UiaInterop.cs",
+                      "upstreamSha256":  "0799FD190C9C260CB7D438BC0A180DBC52FE4B717840CB3325AEA3984BF83910",
+                      "sha256":  "2F896435E74DD6734FC1724B7BF53A0B9D3504AB7697A4046DF6A8D3D00C3DEF"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/Accessibility/UiaProviders.cs",
+                      "upstreamSha256":  "97B653C8FE3082C11B97B092DC1DEACF3954A81B68BBCB3C1BD45193C2963A9A",
+                      "sha256":  "EF468B3F13166B15400CFA2365A59C4EB980B4D0210778D4EF465CB1A07C8B2B"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/DesktopHost.cs",
+                      "upstreamSha256":  "6D104C152E76AA14A57F7EB5EF5BA053EA35B0534FFB9225A45AB9095CA04F88",
+                      "sha256":  "BF86D3AC988E358676321526584A65A998147DB74AC0B796E3E7BE1A19BABFF1"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/DpiTrace.cs",
+                      "upstreamSha256":  "B8DFE8988BA162E882B5017F0FD1F7886986481A17291EF9E9ADCD8EFE628932",
+                      "sha256":  "B8DFE8988BA162E882B5017F0FD1F7886986481A17291EF9E9ADCD8EFE628932"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/FrameStats.cs",
+                      "upstreamSha256":  "E56343EAA4079BC667EC84CD23449FFB1E76AF50D5918DD5FC9692856426A794",
+                      "sha256":  "E56343EAA4079BC667EC84CD23449FFB1E76AF50D5918DD5FC9692856426A794"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/HeadlessRenderer.cs",
+                      "upstreamSha256":  "5BF04E452CAFF83B4387A8C1AD4BB7F963493B4179B4E538E7EB3433154F7C0B",
+                      "sha256":  "5BF04E452CAFF83B4387A8C1AD4BB7F963493B4179B4E538E7EB3433154F7C0B"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/SdlSoftwareWindow.cs",
+                      "upstreamSha256":  "606C888CF122CDA71BCC4BB0E5C34851452DBBA57B940A35797C4F76A70F6E9A",
+                      "sha256":  "606C888CF122CDA71BCC4BB0E5C34851452DBBA57B940A35797C4F76A70F6E9A"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/SkiaWindow.cs",
+                      "upstreamSha256":  "E9179D064284AFECE09C8113303DC7C85F0B93CAD1D7C56F04DCD682C6004810",
+                      "sha256":  "8CD50E2919A28DD85E9D957AA00F88D20C187121C580413D843542D920515CF5"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/WindowChrome.cs",
+                      "upstreamSha256":  "05085F347B7F8D707FCA4BB1B2EFD121733079A3BF63A9A4A3B0567A25C61300",
+                      "sha256":  "05085F347B7F8D707FCA4BB1B2EFD121733079A3BF63A9A4A3B0567A25C61300"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/WindowsDpi.cs",
+                      "upstreamSha256":  "87A96FB2DD8B12C98CC97591C0B76380E3357AE420F0EE81F403E4D6E9560633",
+                      "sha256":  "87A96FB2DD8B12C98CC97591C0B76380E3357AE420F0EE81F403E4D6E9560633"
+                  },
+                  {
+                      "file":  "CupriFace.Shell/WindowsTrayIcon.cs",
+                      "upstreamSha256":  "57873F60B9E9130F62C442AB54928EAC7233869A34C0D12320EEB2E72FAA5025",
+                      "sha256":  "57873F60B9E9130F62C442AB54928EAC7233869A34C0D12320EEB2E72FAA5025"
+                  }
+              ]
+}

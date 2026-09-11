@@ -4,3 +4,7 @@
 *.csproj text eol=lf
 *.json text eol=lf
 *.ps1 text eol=crlf
+# Keep vendored source/asset checksums reproducible on every checkout.
+third-party/** text eol=lf
+# Unified diffs contain required single-space blank context lines.
+*.patch text eol=lf -whitespace

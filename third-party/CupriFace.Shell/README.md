@@ -1,0 +1,13 @@
+# Vendored CupriFace desktop host
+
+This project builds the MIT-licensed CupriFace 0.20.0 desktop host from source, with the reviewed Shade fixes described in [the patch record](../CupriFace-Shell-dpi.md). Copyright (c) 2026 Wixely; see the [preserved license](../CupriFace-LICENSE.txt).
+
+The 20 C# files come from upstream commit `56a9850decbb3e07b1cbd5f409f3d988e406b94b`. [provenance.json](provenance.json) records each original and vendored SHA-256. Seven files differ: `SkiaWindow.cs` measures non-Windows scale consistently, `DesktopHost.cs` uses a single-file-compatible probe entry path, `Accessibility/AtSpiBridge.cs` reveals clipped controls for activation/focus and captures masked-entry roles, and `Accessibility/AtSpi.cs` names the password role. `UiaBridge.cs`, `UiaProviders.cs` and `UiaInterop.cs` add Windows password semantics and reject protected value reads. The patches are [DPI measurement](../CupriFace-Shell-dpi.patch), [probe path](../CupriFace-Shell-probe.patch), [Linux accessibility](../CupriFace-Shell-accessibility.patch) and [Windows password semantics](../CupriFace-Shell-windows-password.md).
+
+`Shade.CupriHost.csproj` is Shade-owned build configuration. It keeps the `CupriFace.Shell` assembly identity and references the [vendored engine](../CupriFace.Engine/README.md), which corrects focus-outline painting. Neither project uses a sibling checkout. The engine supplies the same native Skia/HarfBuzz assets as upstream. Existing desktop host dependency versions remain unchanged. The local informational version is `0.20.0-shade.8`. Slider values, switch states and screen-button labels also emit change notifications. Property-change notifications and the corrected server-side provider identity are covered in the Windows accessibility follow-up. The Windows patch also connects editable ValuePattern writes to the engine while preserving password-read rejection; see its follow-up record.
+
+Build and publish Shade normally. No source download, post-publish DLL replacement or installed host package is needed. `scripts/restore.ps1` still retains the original host package pin for the optional before/after evaluation script.
+
+Updates: Codex must review the upstream revision/license, compare the complete source snapshot, reapply or retire all patches, refresh the provenance manifest and lockfile, and rerun shared, Windows live GPU/software/tray and Linux resize/close/accessibility checks. Trimming and actual monitor-DPI transitions require their own validation. Do not replace these files from an unreviewed working checkout.
+
+Reviewed: 2026-09-10. Next review: 2026-09-17. Owner: Codex.

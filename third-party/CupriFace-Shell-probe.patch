@@ -1,0 +1,11 @@
+diff --git a/src/CupriFace.Shell/DesktopHost.cs b/src/CupriFace.Shell/DesktopHost.cs
+--- a/src/CupriFace.Shell/DesktopHost.cs
++++ b/src/CupriFace.Shell/DesktopHost.cs
+@@ -476,6 +476,6 @@
+             // would swallow the flag — re-exec the entry assembly through it. Published apps
+             // (apphost or single-file) re-exec themselves.
+-            var entry = System.Reflection.Assembly.GetEntryAssembly()?.Location;
++            var entry = Environment.GetCommandLineArgs().FirstOrDefault();
+             var viaHost = Path.GetFileNameWithoutExtension(exe).Equals("dotnet", StringComparison.OrdinalIgnoreCase)
+                           && entry is { Length: > 0 };
+             var psi = new ProcessStartInfo(exe)

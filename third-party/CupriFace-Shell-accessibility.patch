@@ -1,0 +1,155 @@
+diff --git a/src/CupriFace.Shell/Accessibility/AtSpiBridge.cs b/src/CupriFace.Shell/Accessibility/AtSpiBridge.cs
+index 70ae2aa..22ab22e 100644
+--- a/src/CupriFace.Shell/Accessibility/AtSpiBridge.cs
++++ b/src/CupriFace.Shell/Accessibility/AtSpiBridge.cs
+@@ -31,6 +31,7 @@ internal sealed class AtSpiBridge : IPathMethodHandler
+         AccessibilityNode Root,
+         IReadOnlyList<AccessibilityNode> ById,          // index = the object's AT-SPI id
+         IReadOnlyDictionary<string, int> IdByPath,
++        IReadOnlySet<string> PasswordPaths,
+         string? FocusedPath,
+         float Scale,
+         float OriginX,
+@@ -183,10 +184,15 @@ internal sealed class AtSpiBridge : IPathMethodHandler
+         var root = _doc.BuildAccessibilityTree(logicalWidth, logicalHeight);
+         var byId = new List<AccessibilityNode>();
+         var idByPath = new Dictionary<string, int>(StringComparer.Ordinal);
++        var passwordPaths = new HashSet<string>(StringComparer.Ordinal);
+         string? focusedPath = null;
+ 
+         void Index(AccessibilityNode n)
+         {
++            // Capture masking semantics on the UI thread. Bus readers must never
++            // inspect the mutable render tree or infer a password from its label.
++            if (n.Role == "textbox" && _doc.NodeAtPath(n.Path)?.Element?.HasAttribute("data-mask") == true)
++                passwordPaths.Add(n.Path);
+             var id = IdFor(n.Path);
+             while (byId.Count <= id) byId.Add(root);       // dense list; gaps point at the root
+             byId[id] = n;
+@@ -198,7 +204,7 @@ internal sealed class AtSpiBridge : IPathMethodHandler
+ 
+         if (_snapshot is null) Log($"first snapshot: {idByPath.Count} nodes, root role '{root.Role}'");
+         var previous = _snapshot;
+-        _snapshot = new Snapshot(root, byId, idByPath, focusedPath,
++        _snapshot = new Snapshot(root, byId, idByPath, passwordPaths, focusedPath,
+             scale <= 0 ? 1f : scale, clientOrigin.X, clientOrigin.Y);
+ 
+         if (focusedPath != previous?.FocusedPath) EmitFocusMoved(previous?.FocusedPath, focusedPath, idByPath);
+@@ -515,6 +521,9 @@ internal sealed class AtSpiBridge : IPathMethodHandler
+ 
+     private static string NameOf(AccessibilityNode n) => n.Name ?? n.Value ?? "";
+ 
++    private static uint RoleOf(Snapshot snap, AccessibilityNode node) =>
++        snap.PasswordPaths.Contains(node.Path) ? AtSpi.RolePasswordText : AtSpi.RoleOf(node.Role);
++
+     private void Accessible(MethodContext context, Snapshot snap, AccessibilityNode? node, bool isRoot, string member)
+     {
+         switch (member)
+@@ -522,7 +531,7 @@ internal sealed class AtSpiBridge : IPathMethodHandler
+             case "GetRole":
+             {
+                 using var w = context.CreateReplyWriter("u");
+-                w.WriteUInt32(isRoot ? AtSpi.RoleApplication : AtSpi.RoleOf(node!.Role));
++                w.WriteUInt32(isRoot ? AtSpi.RoleApplication : RoleOf(snap, node!));
+                 context.Reply(w.CreateMessage());
+                 return;
+             }
+@@ -530,7 +539,7 @@ internal sealed class AtSpiBridge : IPathMethodHandler
+             case "GetLocalizedRoleName":
+             {
+                 using var w = context.CreateReplyWriter("s");
+-                w.WriteString(AtSpi.RoleNameOf(isRoot ? AtSpi.RoleApplication : AtSpi.RoleOf(node!.Role)));
++                w.WriteString(AtSpi.RoleNameOf(isRoot ? AtSpi.RoleApplication : RoleOf(snap, node!)));
+                 context.Reply(w.CreateMessage());
+                 return;
+             }
+@@ -716,7 +725,7 @@ internal sealed class AtSpiBridge : IPathMethodHandler
+         w.WriteArrayEnd(ifaces);
+ 
+         w.WriteString(isApplication ? _appName : NameOf(node!));
+-        w.WriteUInt32(isApplication ? AtSpi.RoleApplication : AtSpi.RoleOf(node!.Role));
++        w.WriteUInt32(isApplication ? AtSpi.RoleApplication : RoleOf(snap, node!));
+         w.WriteString("");                                     // description
+ 
+         var (low, high) = isApplication
+@@ -760,7 +769,13 @@ internal sealed class AtSpiBridge : IPathMethodHandler
+             case "GrabFocus":
+             {
+                 var target = node.Path;
+-                Post(doc => doc.AccessibilityFocus(target));
++                Post(doc =>
++                {
++                    doc.AccessibilityFocus(target);
++                    // Leave room for the editable child's caret/outline and its
++                    // containing field padding, not only its text rectangle.
++                    RevealForInteraction(doc, target, 24);
++                });
+                 using var w = context.CreateReplyWriter("b");
+                 w.WriteBool(true);
+                 context.Reply(w.CreateMessage());
+@@ -829,7 +844,11 @@ internal sealed class AtSpiBridge : IPathMethodHandler
+                 if (ok)
+                 {
+                     var target = node.Path;
+-                    Post(doc => doc.AccessibilityActivate(target));
++                    Post(doc =>
++                    {
++                        RevealForInteraction(doc, target);
++                        doc.AccessibilityActivate(target);
++                    });
+                 }
+                 using var w = context.CreateReplyWriter("b");
+                 w.WriteBool(ok);
+@@ -853,6 +872,40 @@ internal sealed class AtSpiBridge : IPathMethodHandler
+         }
+     }
+ 
++    private static void RevealForInteraction(CupriFace.CupriDocument doc, string target, float margin = 0)
++    {
++        // Focus and scrolling can rebuild the tree without laying it out. The public
++        // hit-test API ensures current layout without dispatching an input or painting.
++        _ = doc.HitTest(0, 0);
++        if (doc.NodeAtPath(target) is not { } node) return;
++        // Reveal clipped controls before accessibility activation or focus, scrolling
++        // only their ancestors and using the engine's normal scroll handling.
++        var ancestors = new List<string>();
++        for (var parent = node.Parent; parent is not null; parent = parent.Parent)
++        {
++            if (!parent.IsScrollable && !parent.IsScrollableX) continue;
++            var indices = new Stack<int>();
++            for (var current = parent; current.Parent is { } outer; current = outer)
++                indices.Push(outer.Children.IndexOf(current));
++            ancestors.Add(indices.Count == 0 ? "" : "/" + string.Join("/", indices));
++        }
++        foreach (var path in ancestors)
++        {
++            // Scrolling may refresh the render tree; resolve both nodes again each time.
++            _ = doc.HitTest(0, 0);
++            if (doc.NodeAtPath(path) is not { } parent || doc.NodeAtPath(target) is not { } current) continue;
++            var bounds = CupriFace.Interaction.HitTesting.ScreenBox(current);
++            var viewport = CupriFace.Interaction.HitTesting.ScreenBox(parent);
++            var left = viewport.X + parent.ContentLeftInset;
++            var top = viewport.Y + parent.ContentTopInset;
++            static float Delta(float start, float size, float viewStart, float viewSize) =>
++                start < viewStart ? start - viewStart : MathF.Max(0, MathF.Min(start - viewStart, start + size - viewStart - viewSize));
++            var dx = parent.IsScrollableX ? Delta(bounds.X - margin, bounds.W + 2 * margin, left, parent.ContentBoxWidth) : 0;
++            var dy = parent.IsScrollable ? Delta(bounds.Y - margin, bounds.H + 2 * margin, top, parent.ContentBoxHeight) : 0;
++            if (dx != 0 || dy != 0) doc.ScrollCaptured(dy != 0 ? path : null, dx != 0 ? path : null, dy, dx);
++        }
++    }
++
+     private void ApplicationIface(MethodContext context, string member)
+     {
+         switch (member)
+diff --git a/src/CupriFace.Shell/Accessibility/AtSpi.cs b/src/CupriFace.Shell/Accessibility/AtSpi.cs
+index 4f64cc7..38ee669 100644
+--- a/src/CupriFace.Shell/Accessibility/AtSpi.cs
++++ b/src/CupriFace.Shell/Accessibility/AtSpi.cs
+@@ -129,6 +129,7 @@ internal static class AtSpi
+         RoleProgressBar => "progress bar",
+         RoleSpinButton => "spin button",
+         RoleEntry => "entry",
++        RolePasswordText => "password text",
+         RoleComboBox => "combo box",
+         RoleList => "list",
+         RoleListItem => "list item",

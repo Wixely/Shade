@@ -1,0 +1,13 @@
+diff --git a/src/CupriFace.Shell/SkiaWindow.cs b/src/CupriFace.Shell/SkiaWindow.cs
+--- a/src/CupriFace.Shell/SkiaWindow.cs
++++ b/src/CupriFace.Shell/SkiaWindow.cs
+@@ -116,7 +116,7 @@
+         if (!_dpiAware) return 1f;
+         if (OperatingSystem.IsWindows())
+             return Win32Hwnd is { } hwnd ? HostScale.Sanitize(WindowsDpi.GetScaleForWindow(hwnd)) : _deviceScale;
+-        if (_window is { } w && w.Size.X > 0 && _fbSize.X > 0)
+-            return HostScale.Sanitize((float)_fbSize.X / w.Size.X);
++        if (_window is { } w && w.Size.X > 0 && w.FramebufferSize.X > 0)
++            return HostScale.Sanitize((float)w.FramebufferSize.X / w.Size.X);
+         return 1f;
+     }
