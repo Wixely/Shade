@@ -4,7 +4,7 @@ A little less light. Just where you want it.
 
 Shade dims individual monitors using a compact interface that mirrors your desktop layout. Built with C#, .NET 10, and CupriFace, with Home Assistant control through MQTT.
 
-**Current version: 1.0.0-rc.1.** A Windows x64 release candidate is being prepared locally. See the [release notes and known limitations](docs/release-1.0.0-rc.1.md). No downloadable release has been published yet.
+**Current version: 1.0.0-rc.2.** Download the Windows x64 candidate from [GitHub Releases](https://github.com/Wixely/Shade/releases). See the [release notes and known limitations](docs/release-1.0.0-rc.2.md).
 
 ## Controls
 
@@ -49,7 +49,7 @@ Windows settings live in `%LOCALAPPDATA%\Shade`. Back up this folder before upgr
 
 ## Platform status
 
-Windows is the primary release target. Linux X11 and Wayland backends are implemented, but desktop acceptance is unfinished; no Linux binary is offered for this candidate. Physical display continuity, gaming/HDR/VRR performance, complete Home Assistant lifecycle testing and native text accessibility still have open validation items. See the [release checklist](docs/release-1.0.0-rc.1.md).
+Windows is the primary release target. Linux X11 and Wayland backends are implemented, but desktop acceptance is unfinished; no Linux binary is offered for this candidate. Physical display continuity, gaming/HDR/VRR performance, complete Home Assistant lifecycle testing and native text accessibility still have open validation items. See the [release checklist](docs/release-1.0.0-rc.2.md).
 
 ## Build and test
 
@@ -70,7 +70,7 @@ Prepare a fresh local Windows candidate:
 ./scripts/prepare-release.ps1
 ```
 
-The candidate includes a self-contained executable, license, release notes and executable checksum under ignored `artifacts/releases/`. It uses the existing untrimmed single-file baseline; trimming and NativeAOT remain optional experiments. Complete the release-note gates before distribution. The script never uploads or tags a release.
+The candidate includes a self-contained executable, license, release notes and executable checksum under ignored `artifacts/releases/`. It uses the existing untrimmed single-file baseline; trimming and NativeAOT remain optional experiments. Complete the release-note gates before distribution. The local script never uploads or tags a release. The [release workflow](.github/workflows/release.yml) builds, tests and publishes when a matching version tag is pushed; see [release automation](docs/release-automation.md).
 
 [Cupri screenshot regeneration](docs/images/README.md) uses synthetic displays and no saved credentials. The vendored CupriFace source is pinned and verified during restore; see [dependency provenance](docs/dependencies.md).
 
