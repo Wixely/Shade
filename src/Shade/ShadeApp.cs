@@ -21,7 +21,9 @@ public sealed class ShadeApp : CupriApp
     }
     public override bool CloseToTray { get; }
     public override string TrayCloseLabel => "Exit Shade";
-    public override string Title => "Shade - feasibility prototype";
+    public override string Title => "Shade";
+    private byte[]? icon;
+    public override byte[] Icon => icon ??= EmbeddedAsset("Shade.Assets.shade.png").ReadBytes();
     public override int Width => 720;
     public override int Height => 740;
     public override SKColor Background => new(0x14, 0x1c, 0x24);
@@ -41,11 +43,18 @@ public sealed class ShadeApp : CupriApp
     }
     public override string Html => """
         <body><main>
-          <header><div class="header-title"><h1>Shade</h1><cupri-button class="automation-toggle" variant="ghost" aria-expanded="{{AutomationOpen}}" aria-controls="automation-panel">{{AutomationLabel}}</cupri-button></div><p class="intro">A little less light. Just where you want it.</p></header>
+          <header><div class="header-title"><h1><cupri-image class="brand-icon" src="Shade.Assets.shade.png" alt=""></cupri-image>Shade</h1><div class="header-actions"><cupri-button class="about-toggle" variant="ghost" data-set-path="AboutOpen" data-set-value="true" aria-haspopup="dialog">About</cupri-button><cupri-button class="automation-toggle" variant="ghost" aria-expanded="{{AutomationOpen}}" aria-controls="automation-panel">{{AutomationLabel}}</cupri-button></div></div><p class="intro">A little less light. Just where you want it.</p></header>
           <section class="global">
             <div class="section-title"><h2>Global dimming</h2><span class="global-value">{{GlobalSummary}}</span></div>
-            <cupri-slider class="global-slider" min="0" max="80" step="1" value="{{GlobalLevel}}" aria-label="Global dimming"></cupri-slider>
-            <div class="scale"><span>No dimming</span><span>80% dimming</span></div>
+            <cupri-slider class="global-slider" min="0" max="{{Maximum}}" step="1" value="{{GlobalLevel}}" aria-label="Global dimming"></cupri-slider>
+            <div class="scale"><span>No dimming</span><span>{{Maximum}}% dimming</span></div>
+            <div class="global-presets" role="group" aria-label="Quick global dimming">
+              <cupri-button class="global-preset" variant="ghost" data-set-path="GlobalLevel" data-set-value="0">0%</cupri-button>
+              <cupri-button class="global-preset" variant="ghost" data-set-path="GlobalLevel" data-set-value="{{GlobalPresetOne}}">{{GlobalPresetOne}}%</cupri-button>
+              <cupri-button class="global-preset" variant="ghost" data-set-path="GlobalLevel" data-set-value="{{GlobalPresetTwo}}">{{GlobalPresetTwo}}%</cupri-button>
+              <cupri-button class="global-preset" variant="ghost" data-set-path="GlobalLevel" data-set-value="{{GlobalPresetThree}}">{{GlobalPresetThree}}%</cupri-button>
+              <cupri-button class="global-preset" variant="ghost" data-set-path="GlobalLevel" data-set-value="{{Maximum}}">{{Maximum}}%</cupri-button>
+            </div>
             <p class="hint">Affects enabled screens using global. Disabled and independent screens stay unchanged.</p>
           </section>
           <div class="content-scroll">
@@ -61,6 +70,7 @@ public sealed class ShadeApp : CupriApp
           </div>
           <cupri-button class="advanced" variant="ghost" aria-expanded="{{AdvancedOpen}}" aria-controls="advanced-panel">{{AdvancedLabel}}</cupri-button>
           <section id="advanced-panel" style="{{AdvancedStyle}}">
+            <div class="global-option"><cupri-switch class="allow-full-shade" checked="{{AllowFullShade}}" aria-label="Allow 100% shading"></cupri-switch><span>Allow 100% shading (fully black)</span></div>
             <p class="hint">Fine-tune a screen without changing the others.</p>
             <section class="display" data-repeat="Displays">
               <h2>{{Number}} · {{Label}}</h2>
@@ -70,7 +80,7 @@ public sealed class ShadeApp : CupriApp
                 <span>Use global</span><span class="hint">{{ModeLabel}}</span>
               </div>
               <div class="level">
-                <cupri-slider class="individual-slider" min="0" max="80" step="1" value="{{Level}}" data-bind-value="{{BindingPath}}" aria-label="{{SliderLabel}}"></cupri-slider>
+                <cupri-slider class="individual-slider" min="0" max="{{Maximum}}" step="1" value="{{Level}}" data-bind-value="{{BindingPath}}" aria-label="{{SliderLabel}}"></cupri-slider>
                 <span class="value">{{Level}}%</span>
               </div>
               <p class="hint">{{IdentityNote}}</p>
@@ -92,7 +102,7 @@ public sealed class ShadeApp : CupriApp
           </section>
           <section id="automation-panel" class="display" style="{{AutomationStyle}}">
             <h2>Home Assistant</h2>
-            <p class="hint">Connect to the MQTT 5 broker used by Home Assistant. Dimming uses the same 0–80% scale. Only identified screens are published.</p>
+            <p class="hint">Connect to the MQTT 5 broker used by Home Assistant. Dimming uses the same 0–{{Maximum}}% scale. Only identified screens are published.</p>
             <label for="broker-host">Broker hostname</label>
             <cupri-textfield id="broker-host" value="{{BrokerHost}}" aria-label="Broker hostname"></cupri-textfield>
             <label for="broker-port">Port</label>
@@ -114,14 +124,24 @@ public sealed class ShadeApp : CupriApp
           <cupri-button class="settings-recover" variant="ghost" style="{{SettingsRecoveryStyle}}">{{SettingsRecoveryLabel}}</cupri-button>
           <p class="footnote">{{LifecycleHint}}</p>
           </div>
-        </main></body>
+        </main>
+        <cupri-dialog open="{{AboutOpen}}" aria-label="About Shade">
+          <cupri-image class="about-icon" src="Shade.Assets.shade.png" alt=""></cupri-image>
+          <h2>About Shade</h2>
+          <p class="about-version">Version {{AppVersion}}</p>
+          <p>A little less light. Just where you want it.</p>
+          <a class="project-link" href="{{ProjectUrl}}" target="_blank">View Shade on GitHub</a>
+          <cupri-button class="about-close" data-cupri-dismiss="true">Close</cupri-button>
+        </cupri-dialog>
+        </body>
         """;
     public override string Css => """
         body { background:#141c24; color:#eaf0f6; font-family:sans-serif; font-size:15px; --cupri-accent:#64cdb6; }
         main { padding:28px; height:100vh; box-sizing:border-box; display:flex; flex-direction:column; overflow:auto; }
         header { flex-shrink:0; }
         .content-scroll { flex:1; min-height:80px; overflow:auto; padding-right:12px; }
-        h1 { font-size:30px; margin:0 0 4px 0; }
+        h1 { display:flex; align-items:center; gap:10px; font-size:30px; margin:0 0 4px 0; }
+        .brand-icon { width:36px; height:36px; }
         h2 { font-size:17px; margin:0; }
         p { margin:0 0 12px 0; }
         .intro { color:#a8bccb; margin-bottom:22px; }
@@ -130,6 +150,8 @@ public sealed class ShadeApp : CupriApp
         .global-value { color:#8ce0cb; font-weight:bold; }
         .global-slider { display:block; height:30px; margin:6px 0; }
         .scale { display:flex; justify-content:space-between; color:#a8bccb; font-size:12px; margin-bottom:10px; }
+        .global-presets { display:flex; gap:8px; margin-bottom:12px; }
+        .global-preset { flex:1; padding:7px 4px; font-size:13px; text-align:center; }
         .hint, .geometry { color:#a8bccb; font-size:13px; }
         .global .hint { margin:0; }
         .map-scroll { overflow:auto; max-height:300px; padding:8px; background:#101820; border-radius:12px; margin-bottom:18px; }
@@ -150,6 +172,13 @@ public sealed class ShadeApp : CupriApp
         .status { color:#8ce0cb; font-size:12px; margin-top:8px; }
         .footnote { color:#91a6b7; font-size:12px; }
         .header-title { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+        .header-actions { display:flex; align-items:center; gap:8px; }
+        .about-toggle { padding:7px 10px; font-size:13px; }
+        .cupri-dialog-panel { background:#202e3b; color:#eaf0f6; width:360px; max-width:90vw; box-sizing:border-box; }
+        .about-icon { width:64px; height:64px; margin-bottom:12px; }
+        .about-version { color:#a8bccb; margin-top:8px; }
+        .project-link { display:block; color:#8ce0cb; text-decoration:underline; margin-bottom:22px; }
+        .about-close { color:#102820; }
         .automation-toggle { padding:7px 10px; font-size:13px; }
         #automation-panel h2 { margin-bottom:12px; }
         #automation-panel label { display:block; margin-bottom:5px; }
@@ -209,6 +238,11 @@ public sealed class ShadeModel : IBindableAccessor
     private readonly ScreenControls controls;
     private readonly HomeAssistantIntegration integration;
     private long automationPublishedRevision = -1;
+    public bool AboutOpen { get; private set; }
+    public string AppVersion { get; } = System.Reflection.CustomAttributeExtensions
+        .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(typeof(ShadeApp).Assembly)
+        ?.InformationalVersion.Split('+')[0] ?? "Unknown";
+    public string ProjectUrl => "https://github.com/Wixely/Shade";
     public bool AutomationOpen { get; private set; }
     public string AutomationStyle => AutomationOpen ? "display:block;" : "display:none;";
     public string ScreensStyle => AutomationOpen || AssignmentOpen ? "display:none;" : "display:block;";
@@ -295,11 +329,13 @@ public sealed class ShadeModel : IBindableAccessor
             if (automationPublishedRevision != current)
             {
                 automationPublishedRevision = current;
-                integration.Update(new(controls.GlobalLevel, backend.Displays.Where(d => d.CanRemember).Select(d =>
+                _ = Displays; // Use the same cached numbering as the monitor graphic, before filtering untrusted identities.
+                integration.Update(new(controls.GlobalLevel, layout.Tiles.Where(t => t.Display.CanRemember).Select(t =>
                 {
+                    var d = t.Display;
                     var control = controls.Get(d.Id);
-                    return new AutomationScreen(d.Id, d.Label, control.Enabled, control.UseGlobal, backend.GetLevel(d.Id), d.X, d.Y, d.Width, d.Height);
-                }).ToArray()));
+                    return new AutomationScreen(d.Id, $"Screen {t.Number}: {d.Label}", control.Enabled, control.UseGlobal, backend.GetLevel(d.Id), d.X, d.Y, d.Width, d.Height);
+                }).ToArray(), controls.Maximum));
             }
             return current + uiRevision + integration.Revision;
         }
@@ -351,9 +387,17 @@ public sealed class ShadeModel : IBindableAccessor
         nameof(CanvasStyle) => CanvasStyle,
         nameof(GlobalSummary) => GlobalSummary,
         nameof(GlobalLevel) => GlobalLevel,
+        nameof(Maximum) => Maximum,
+        nameof(AllowFullShade) => AllowFullShade,
+        nameof(GlobalPresetOne) => GlobalPresetOne,
+        nameof(GlobalPresetTwo) => GlobalPresetTwo,
+        nameof(GlobalPresetThree) => GlobalPresetThree,
         nameof(AdvancedOpen) => AdvancedOpen,
         nameof(AdvancedLabel) => AdvancedLabel,
         nameof(AdvancedStyle) => AdvancedStyle,
+        nameof(AboutOpen) => AboutOpen,
+        nameof(AppVersion) => AppVersion,
+        nameof(ProjectUrl) => ProjectUrl,
         nameof(AutomationOpen) => AutomationOpen,
         nameof(AutomationStyle) => AutomationStyle,
         nameof(ScreensStyle) => ScreensStyle,
@@ -382,10 +426,19 @@ public sealed class ShadeModel : IBindableAccessor
         {
             switch (name)
             {
+                case nameof(AboutOpen): AboutOpen = Convert.ToBoolean(value); uiRevision++; return true;
                 case nameof(AssignmentName): AssignmentName = Convert.ToString(value) ?? ""; uiRevision++; return true;
+                case nameof(AllowFullShade): controls.SetAllowFullShade(Convert.ToBoolean(value)); uiRevision++; return true;
                 case nameof(BrokerHost): BrokerHost = Convert.ToString(value) ?? ""; uiRevision++; return true;
                 case nameof(BrokerPort): BrokerPort = Convert.ToString(value) ?? ""; uiRevision++; return true;
-                case nameof(BrokerTls): BrokerTls = Convert.ToBoolean(value); uiRevision++; return true;
+                case nameof(BrokerTls):
+                    var tls = Convert.ToBoolean(value);
+                    if (tls == BrokerTls) return true;
+                    if (tls && BrokerPort == "1883") BrokerPort = "8883";
+                    else if (!tls && BrokerPort == "8883") BrokerPort = "1883";
+                    BrokerTls = tls;
+                    uiRevision++;
+                    return true;
                 case nameof(BrokerUsername): BrokerUsername = Convert.ToString(value) ?? ""; uiRevision++; return true;
                 case nameof(BrokerPassword): BrokerPassword = Convert.ToString(value) ?? ""; uiRevision++; return true;
             }
@@ -398,6 +451,11 @@ public sealed class ShadeModel : IBindableAccessor
         catch (Exception ex) { ReportError(ex); return false; }
     }
     public int GlobalLevel => controls.GlobalLevel;
+    public int Maximum => controls.Maximum;
+    public bool AllowFullShade => controls.AllowFullShade;
+    public int GlobalPresetOne => AllowFullShade ? 25 : 20;
+    public int GlobalPresetTwo => AllowFullShade ? 50 : 40;
+    public int GlobalPresetThree => AllowFullShade ? 75 : 60;
     public string GlobalSummary
     {
         get
@@ -454,6 +512,7 @@ public sealed class DisplayModel(MonitorTile tile, IDimmingBackend backend, Scre
 {
     private Display display => tile.Display;
     public int Number => tile.Number;
+    public int Maximum => controls.Maximum;
     public string TileStyle => tile.Style;
     public bool Enabled => controls.Get(Id).Enabled;
     public bool UseGlobal => controls.Get(Id).UseGlobal;
@@ -484,6 +543,7 @@ public sealed class DisplayModel(MonitorTile tile, IDimmingBackend backend, Scre
     {
         nameof(Id) => Id,
         nameof(Number) => Number,
+        nameof(Maximum) => Maximum,
         nameof(TileStyle) => TileStyle,
         nameof(Enabled) => Enabled,
         nameof(UseGlobal) => UseGlobal,

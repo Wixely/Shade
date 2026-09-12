@@ -139,7 +139,7 @@ public static class ShadeSmokeWindow {
             uint id; GetWindowThreadProcessId(window, out id);
             if (id != process) return true;
             var title = new StringBuilder(256); GetWindowText(window, title, title.Capacity);
-            if (title.ToString().StartsWith("Shade - feasibility")) { found = window; return false; }
+            if (title.ToString() == "Shade") { found = window; return false; }
             return true;
         }, IntPtr.Zero);
         return found;
@@ -216,7 +216,7 @@ try {
             [ShadeSmokeWindow]::ShowWindow($nativeWindow, 4) | Out-Null
             $window = [System.Windows.Automation.AutomationElement]::FromHandle($nativeWindow)
         }
-        if ($window -and $window.Current.Name -like 'Shade - feasibility*') { break }
+        if ($window -and $window.Current.Name -eq 'Shade') { break }
         Start-Sleep -Milliseconds 200
     }
     if (-not $window) { throw 'Shade window did not appear.' }

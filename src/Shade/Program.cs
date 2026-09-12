@@ -16,8 +16,8 @@ if (!OperatingSystem.IsWindows() && !OperatingSystem.IsLinux())
 try
 {
     var session = OperatingSystem.IsWindows() ? "Local\\Shade.Desktop" : LinuxDesktopSession.Current().MutexName;
-    using var singleInstance = new Mutex(true, session, out var firstInstance);
-    if (!firstInstance) { Console.Error.WriteLine("Shade is already running in this session."); return 3; }
+    using var singleInstance = SingleInstanceGuard.TryAcquire(session);
+    if (singleInstance is null) { Console.Error.WriteLine("Shade is already running in this session."); return 3; }
     var settingsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Shade");
     var directoryOption = Array.IndexOf(args, "--settings-directory");
     if (directoryOption >= 0)

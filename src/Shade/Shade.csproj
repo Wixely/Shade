@@ -1,6 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <Version>1.0.0-rc.1</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Product>Shade</Product>
+    <Title>Shade</Title>
+    <Description>Multi-monitor screen dimming with Home Assistant integration.</Description>
+    <Authors>Wixely</Authors>
+    <RepositoryUrl>https://github.com/Wixely/Shade</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <ApplicationIcon>Assets/shade.ico</ApplicationIcon>
     <PublishTrimmed Condition="'$(Trim)' == 'true'">true</PublishTrimmed>
     <PublishAot Condition="'$(Aot)' == 'true'">true</PublishAot>
   </PropertyGroup>
@@ -10,6 +20,7 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildProjectDirectory)/Silk.LinkAttributes.xml</MSBuildAllProjects>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Assets/shade.png" LogicalName="Shade.Assets.shade.png" />
     <ProjectReference Include="../../third-party/CupriFace.Engine/Shade.CupriEngine.csproj" />
     <ProjectReference Include="../../third-party/CupriFace.Shell/Shade.CupriHost.csproj" />
     <PackageReference Include="MQTTnet" Version="5.2.0.1603" />

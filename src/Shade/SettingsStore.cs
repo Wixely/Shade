@@ -7,10 +7,19 @@ public sealed record RememberedControl(bool Enabled, bool UseGlobal, int Individ
 {
     public int EffectiveLevel(int global) => Enabled ? UseGlobal ? global : IndividualLevel : 0;
 }
-public sealed record ControlPreferences(int GlobalLevel, IReadOnlyDictionary<string, RememberedControl> Screens);
+public sealed record ControlPreferences(int GlobalLevel, IReadOnlyDictionary<string, RememberedControl> Screens, bool AllowFullShade = false);
 public sealed class ShadeSettings
 {
-    public int Version { get; set; } = 3;
+    public int Version { get; set; } = 4;
+    public bool AllowFullShade { get; set; }
+    public void SetFullShade(bool enabled)
+    {
+        AllowFullShade = enabled;
+        if (enabled) return;
+        GlobalLevel = Math.Min(GlobalLevel, DimLevel.DefaultMaximum);
+        foreach (var id in Controls.Keys.ToArray()) Controls[id] = Controls[id] with { IndividualLevel = Math.Min(Controls[id].IndividualLevel, DimLevel.DefaultMaximum) };
+        foreach (var id in Displays.Keys.ToArray()) Displays[id] = Displays[id] with { Level = Math.Min(Displays[id].Level, DimLevel.DefaultMaximum) };
+    }
     public Dictionary<string, ScreenAssignment> Assignments { get; set; } = [];
     public int GlobalLevel { get; set; } = 30;
     public Dictionary<string, RememberedControl> Controls { get; set; } = [];
@@ -30,11 +39,12 @@ public sealed class SettingsStore(string path)
         {
             if (new FileInfo(path).Length > 1024 * 1024) throw new InvalidDataException();
             var settings = JsonSerializer.Deserialize(File.ReadAllText(path), ShadeJsonContext.Default.ShadeSettings) ?? throw new InvalidDataException();
-            if (settings.Version is not (1 or 2 or 3) || settings.Displays is null || settings.AmbiguousHardware is null ||
+            var maximum = settings.AllowFullShade ? DimLevel.Maximum : DimLevel.DefaultMaximum;
+            if (settings.Version is not (1 or 2 or 3 or 4) || settings.Displays is null || settings.AmbiguousHardware is null ||
                 settings.Assignments is null || !IdentityAssignments.Valid(settings.Assignments) ||
-                settings.Controls is null || settings.GlobalLevel is < 0 or > DimLevel.Maximum ||
-                settings.Controls.Any(p => p.Value is null || p.Value.IndividualLevel is < 0 or > DimLevel.Maximum) ||
-                settings.Displays.Any(p => p.Value is null || p.Value.Level is < 0 or > DimLevel.Maximum || p.Value.Width <= 0 || p.Value.Height <= 0))
+                settings.Controls is null || settings.GlobalLevel < 0 || settings.GlobalLevel > maximum ||
+                settings.Controls.Any(p => p.Value is null || p.Value.IndividualLevel < 0 || p.Value.IndividualLevel > maximum) ||
+                settings.Displays.Any(p => p.Value is null || p.Value.Level < 0 || p.Value.Level > maximum || p.Value.Width <= 0 || p.Value.Height <= 0))
                 throw new InvalidDataException();
             if (settings.Version == 1)
             {
@@ -42,7 +52,7 @@ public sealed class SettingsStore(string path)
                 settings.Controls = settings.Displays.ToDictionary(p => p.Key,
                     p => new RememberedControl(p.Value.Level > 0, false, p.Value.Level > 0 ? p.Value.Level : 30));
             }
-            settings.Version = 3;
+            settings.Version = 4;
             return settings;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)

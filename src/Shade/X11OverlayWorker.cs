@@ -182,6 +182,7 @@ internal sealed class X11OverlayWorker
                 foreach (var d in overlays.Select(o => o.Display).Where(d => d.CanRemember))
                     if (preferences.Screens.TryGetValue(d.Id, out var control))
                     { DimLevel.Validate(control.IndividualLevel); settings.Controls[d.Id] = control; }
+                settings.SetFullShade(preferences.AllowFullShade);
                 ScheduleSave(); break;
             case "restore": RestoreAll(); break;
             case "refresh": if (!hotkey) ConfigureRecoveryHotkey(); Reconcile(); break;
@@ -277,7 +278,7 @@ internal sealed class X11OverlayWorker
     private void Publish(long sequence, string? error = null)
     {
         var state = new X11State(overlays.Select(o => o.Display).ToArray(), overlays.ToDictionary(o => o.Display.Id, o => o.Level),
-            new(settings.GlobalLevel, new Dictionary<string, RememberedControl>(settings.Controls)),
+            new(settings.GlobalLevel, new Dictionary<string, RememberedControl>(settings.Controls), settings.AllowFullShade),
             settings.Assignments.Select(p => new AssignmentChoice(p.Key, p.Value.Name, raw.Any(d => d.Id == p.Value.ConnectionId))).ToArray(),
             restoreVersion, store?.Error ?? status, store?.Error is not null, store?.PreservingUnreadableFile == true);
         Console.WriteLine(JsonSerializer.Serialize(new X11Response(sequence, state, error), ShadeJsonContext.Default.X11Response)); Console.Out.Flush();

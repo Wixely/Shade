@@ -5,9 +5,10 @@ public sealed record Display(string Id, string Label, int X, int Y, int Width, i
 
 public static class DimLevel
 {
-    public const int Maximum = 80;
+    public const int DefaultMaximum = 80;
+    public const int Maximum = 100;
     public static int Validate(int value) => value is >= 0 and <= Maximum
-        ? value : throw new ArgumentOutOfRangeException(nameof(value), "Dimming must be between 0 and 80 percent.");
+        ? value : throw new ArgumentOutOfRangeException(nameof(value), "Dimming must be between 0 and 100 percent.");
     public static byte Alpha(int value) => (byte)Math.Round(Validate(value) * 255d / 100);
 }
 

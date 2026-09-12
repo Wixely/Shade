@@ -41,7 +41,8 @@ static class AutomationTests
         {
             using var integration = new HomeAssistantIntegration(path);
             using var backend = new FakeBackend();
-            backend.ReplaceDisplays(FakeBackend.InitialDisplays.Select(d => d with { CanRemember = true }).ToArray());
+            backend.ReplaceDisplays([new("untrusted", "Unassigned screen", -800, 0, 800, 600),
+                .. FakeBackend.InitialDisplays.Select(d => d with { CanRemember = true, Label = "Identical monitor" })]);
             var model = new ShadeModel(backend, integration);
             void Wait(Func<bool> condition, string failure)
             {
@@ -60,12 +61,32 @@ static class AutomationTests
             var root = "shade/" + settings.InstallationId;
             var a = root + "/screen/a"; var b = root + "/screen/b";
             Wait(() => received.GetValueOrDefault(root + "/availability") == "online" && received.ContainsKey(a + "/level/state"), "Discovery not published");
+            foreach (var display in model.Displays.Where(d => d.Id is "a" or "b"))
+            foreach (var (component, suffix) in new[] { ("switch", "enabled"), ("switch", "global"), ("number", "level") })
+            {
+                var topic = $"homeassistant/{component}/{settings.InstallationId}/{display.Id}_{suffix}/config";
+                Wait(() => received.ContainsKey(topic), "Screen discovery missing");
+                using var named = JsonDocument.Parse(received[topic]);
+                Check(named.RootElement.GetProperty("name").GetString()!.StartsWith($"Screen {display.Number}: {display.Label} ", StringComparison.Ordinal),
+                    "Home Assistant screen number differs from the monitor graphic");
+                Check(named.RootElement.GetProperty("unique_id").GetString() == $"{settings.InstallationId}_{display.Id}_{suffix}", "Number changed entity identity");
+            }
             Check(!File.ReadAllText(path).Contains("synthetic-password"), "Password stored in plaintext");
             Check(await AutomationSettingsStore.UnprotectAsync(settings.ProtectedPassword) == "synthetic-password", "Credential protection failed");
             using (var config = JsonDocument.Parse(received[$"homeassistant/number/{settings.InstallationId}/a_level/config"]))
             { Check(config.RootElement.GetProperty("max").GetInt32() == 80, "Wrong dimming scale"); Check(!config.RootElement.GetProperty("retain").GetBoolean(), "Discovery permits retained commands"); }
             async Task Command(string topic, string payload, bool retain = false) => await observer.PublishAsync(new MqttApplicationMessageBuilder()
                 .WithTopic(topic).WithPayload(payload).WithRetainFlag(retain).WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce).Build());
+            var globalConfig = $"homeassistant/number/{settings.InstallationId}/global/config";
+            bool HasMaximum(int maximum) => received.TryGetValue(globalConfig, out var payload)
+                && System.Text.Json.Nodes.JsonNode.Parse(payload)?["max"]?.GetValue<int>() == maximum;
+            model.SetBindable(nameof(ShadeModel.AllowFullShade), true);
+            Wait(() => HasMaximum(100), "100% limit was not published");
+            await Command(root + "/global/set", "100");
+            Wait(() => model.GlobalLevel == 100, "Full-shade MQTT command was rejected");
+            Check(backend.GetLevel("a") == 0 && backend.GetLevel("b") == 0, "Full global enabled disabled screens");
+            model.SetBindable(nameof(ShadeModel.AllowFullShade), false);
+            Wait(() => HasMaximum(80) && model.GlobalLevel == 80, "Default limit did not return");
             await Command(root + "/global/set", "20.0");
             Wait(() => model.GlobalLevel == 20, "Global command not applied");
             Check(backend.GetLevel("a") == 0 && backend.GetLevel("b") == 0, "Global enabled screens");
@@ -82,6 +103,8 @@ static class AutomationTests
             Wait(() => received.GetValueOrDefault(b + "/level/state") == "12", "Local UI state not published");
             backend.ReplaceDisplays([FakeBackend.InitialDisplays[0] with { CanRemember = true, X = -1920 }]);
             Wait(() => received.GetValueOrDefault(b + "/availability") == "offline", "Disconnected screen stayed available");
+            Wait(() => received.GetValueOrDefault($"homeassistant/number/{settings.InstallationId}/a_level/config")?.Contains("Screen 1:") == true,
+                "Display numbering did not update discovery after topology changed");
             var client = (await server.GetClientsAsync()).Single(c => c.Id == "shade_" + settings.InstallationId);
             await client.DisconnectAsync();
             Wait(() => Volatile.Read(ref shadeConnections) >= 2 && integration.Status.StartsWith("Connected"), "Reconnect failed");

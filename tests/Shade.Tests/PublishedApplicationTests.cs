@@ -295,7 +295,7 @@ static class PublishedApplicationTests
         {
             GetWindowThreadProcessId(window, out var owner);
             var title = new StringBuilder(128); GetWindowTextW(window, title, title.Capacity);
-            if (owner == process && title.ToString().StartsWith("Shade -", StringComparison.Ordinal)) control = window;
+            if (owner == process && title.ToString() == "Shade") control = window;
             return true;
         }, 0);
         return control;

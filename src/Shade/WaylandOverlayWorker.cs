@@ -145,6 +145,7 @@ internal sealed class WaylandOverlayWorker
                 settings.GlobalLevel = preferences.GlobalLevel;
                 foreach (var d in displays.Where(d => d.CanRemember))
                     if (preferences.Screens.TryGetValue(d.Id, out var control)) settings.Controls[d.Id] = control;
+                settings.SetFullShade(preferences.AllowFullShade);
                 ScheduleSave(); break;
             case "restore": await Restore(); break;
             case "assign":
@@ -201,7 +202,7 @@ internal sealed class WaylandOverlayWorker
     private void Save() { if (dirty && store is not null) { store.Save(settings); dirty = false; } }
     private void Publish(long sequence, string? error = null)
     {
-        var state = new X11State(displays, new(levels), new(settings.GlobalLevel, new Dictionary<string, RememberedControl>(settings.Controls)),
+        var state = new X11State(displays, new(levels), new(settings.GlobalLevel, new Dictionary<string, RememberedControl>(settings.Controls), settings.AllowFullShade),
             settings.Assignments.Select(p => new AssignmentChoice(p.Key, p.Value.Name, raw.Any(d => d.Id == p.Value.ConnectionId))).ToArray(),
             restoreVersion, store?.Error ?? status, store?.Error is not null, store?.PreservingUnreadableFile == true,
             session is not null && recovery?.Ready != true && setup is null);

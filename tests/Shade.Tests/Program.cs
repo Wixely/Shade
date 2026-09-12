@@ -5,6 +5,21 @@ using CupriFace.Interaction;
 using Shade;
 using SkiaSharp;
 
+if (args.Length == 2 && args[0] == "--single-instance-probe")
+{
+    using var guard = SingleInstanceGuard.TryAcquire(args[1]);
+    Console.WriteLine(guard is null ? "duplicate" : "acquired");
+    if (guard is null) return 3;
+    Console.ReadLine();
+    return 0;
+}
+
+if (args.Contains("--readme-screenshots"))
+{
+    ReadmeScreenshots.Capture();
+    return 0;
+}
+
 if (args.Contains("--accessibility-state-preview"))
 {
     CupriFace.Shell.DesktopHost.Run(new AccessibilityStateApp());
@@ -117,13 +132,13 @@ if (args.Contains("--wayland-buffers"))
         var shm = catalog.BindRequired("wl_shm", 1, token).GetAwaiter().GetResult();
         var palette = new WaylandShmPalette(wire, shm);
         palette.Initialize(token).GetAwaiter().GetResult();
-        var buffers = Enumerable.Range(1, 80).Select(level => palette.GetBuffer(level, token).GetAwaiter().GetResult()).ToArray();
-        Assert(buffers.Distinct().Count() == 80, "Palette reused a buffer with different pixel contents");
+        var buffers = Enumerable.Range(1, DimLevel.Maximum).Select(level => palette.GetBuffer(level, token).GetAwaiter().GetResult()).ToArray();
+        Assert(buffers.Distinct().Count() == DimLevel.Maximum, "Palette reused a buffer with different pixel contents");
         Equal(buffers[39], palette.GetBuffer(40, token).GetAwaiter().GetResult());
         catalog.Synchronize(token).GetAwaiter().GetResult();
         palette.Destroy(token).GetAwaiter().GetResult();
         catalog.Synchronize(token).GetAwaiter().GetResult();
-        Console.WriteLine("Compositor accepted 80 immutable 1x1 ARGB buffers from a 320-byte sealed pool; no surfaces created.");
+        Console.WriteLine("Compositor accepted 100 immutable 1x1 ARGB buffers from a 400-byte sealed pool; no surfaces created.");
     });
     return failed == 0 ? 0 : 1;
 }
@@ -334,11 +349,12 @@ if (args.Contains("--linux-catalog") && OperatingSystem.IsLinux()) Run("Linux XR
     Console.WriteLine($"  XRandR {probe.RandrMajor}.{probe.RandrMinor}; {probe.Displays.Count} surface(s); compositor selection present: {probe.Compositor}; trusted identities: {probe.Displays.Count(d => d.CanRemember)}.");
 });
 if (args.Contains("--mqtt")) Run("Isolated MQTT discovery, commands, credentials and reconnect", () => AutomationTests.Run().GetAwaiter().GetResult());
+Run("Single instance rejects duplicates and recovers after exit or crash", SingleInstanceTests.Run);
 Run("Dimming range and alpha", () =>
 {
     Equal((byte)0, DimLevel.Alpha(0)); Equal((byte)204, DimLevel.Alpha(80));
     Throws<ArgumentOutOfRangeException>(() => DimLevel.Validate(-1));
-    Throws<ArgumentOutOfRangeException>(() => DimLevel.Validate(81));
+    Throws<ArgumentOutOfRangeException>(() => DimLevel.Validate(101));
 });
 Run("Wayland protocol hotplug, rotation and connection identity", () => WaylandCatalogTests.Run().GetAwaiter().GetResult());
 Run("Linux desktop identity follows native session endpoints", () =>
@@ -524,7 +540,7 @@ Run("Settings migrate legacy levels and preserve future versions", () =>
     {
         File.WriteAllText(path, """{"Version":1,"Displays":{"a":{"Level":25,"X":0,"Y":0,"Width":800,"Height":600}}} """);
         var store = new SettingsStore(path); var settings = store.Load();
-        Equal(3, settings.Version); Equal(new RememberedControl(true, false, 25), settings.Controls["a"]);
+        Equal(4, settings.Version); Equal(new RememberedControl(true, false, 25), settings.Controls["a"]);
         Assert(store.Save(settings), "Migration could not save");
         Equal(settings.Controls["a"], new SettingsStore(path).Load().Controls["a"]);
         File.WriteAllText(path, """{"Version":99}""");
@@ -555,12 +571,65 @@ Run("Global intent, exclusions and recovery remain independent", () =>
     Assert(!controls.Get("b").UseGlobal, "Exclusion followed display order instead of identity");
     controls.RestoreAll(); Equal(55, controls.GlobalLevel);
 });
+Run("TLS toggles switch standard ports and preserve custom input", () =>
+{
+    using var backend = new FakeBackend();
+    var model = new ShadeModel(backend);
+    foreach (var (tls, port, expected) in new[] {
+        (false, "8883", "1883"), (true, "1883", "8883"),
+        (false, "28883", "28883"), (true, "21883", "21883"),
+        (false, "", ""), (true, "invalid", "invalid") })
+    {
+        model.SetBindable(nameof(ShadeModel.BrokerTls), !tls);
+        model.SetBindable(nameof(ShadeModel.BrokerPort), port);
+        model.SetBindable(nameof(ShadeModel.BrokerTls), tls);
+        Equal(expected, model.BrokerPort);
+    }
+});
+Run("Full shading is opt-in and disabling it clamps levels without enabling screens", () =>
+{
+    using var backend = new FakeBackend();
+    var controls = new ScreenControls(backend);
+    Equal(80, controls.Maximum);
+    Throws<ArgumentOutOfRangeException>(() => controls.SetGlobal(100));
+    controls.SetAllowFullShade(true); controls.SetGlobal(100);
+    Equal(0, backend.GetLevel("a"));
+    controls.Toggle("a"); Equal(100, backend.GetLevel("a")); Equal((byte)255, DimLevel.Alpha(100));
+    controls.SetIndividual("a", 95); controls.SetAllowFullShade(false);
+    Equal(80, controls.GlobalLevel); Equal(80, backend.GetLevel("a")); Equal(0, backend.GetLevel("b"));
+    Assert(!controls.Get("a").UseGlobal, "Clamping changed global membership");
+    var path = Path.Combine(Path.GetTempPath(), "shade-full-" + Guid.NewGuid().ToString("N") + ".json");
+    try
+    {
+        var settings = new ShadeSettings { AllowFullShade = true, GlobalLevel = 100 };
+        settings.Controls["disconnected"] = new(true, false, 99);
+        settings.Displays["disconnected"] = new(99, 0, 0, 1920, 1080);
+        var store = new SettingsStore(path); Assert(store.Save(settings), "Full shading save failed");
+        var restored = store.Load(); Assert(restored.AllowFullShade, "Full shading preference lost"); Equal(100, restored.GlobalLevel);
+        restored.SetFullShade(false);
+        Equal(80, restored.Controls["disconnected"].IndividualLevel); Equal(80, restored.Displays["disconnected"].Level);
+        Assert(store.Save(restored) && !store.Load().AllowFullShade, "Reduced limit did not persist");
+    }
+    finally { File.Delete(path); }
+});
+Run("Home Assistant device name identifies the PC and respects the selected limit", () =>
+{
+    var protocol = new HomeAssistantProtocol("00000000000000000000000000000001", "TEST-PC");
+    foreach (var maximum in new[] { 80, 100 })
+    {
+        var state = new AutomationState(30, [], maximum);
+        using var config = System.Text.Json.JsonDocument.Parse(protocol.Build(state, new HashSet<string>()).First().Payload);
+        Equal("TEST-PC Shade", config.RootElement.GetProperty("device").GetProperty("name").GetString());
+        Equal(maximum, config.RootElement.GetProperty("max").GetInt32());
+        Equal(maximum == 100, protocol.Parse(protocol.Root + "/global/set", "100", false, state) is not null);
+    }
+});
 Run("CupriFace slider, independent restoration and keyboard", () =>
 {
     using var backend = new FakeBackend();
     var app = new ShadeApp(backend);
     using var document = app.CreateDocument();
-    void Render() { using var frame = document.RenderToImage(720, 1000, app.Background); }
+    void Render() { using var frame = document.RenderToImage(720, 1200, app.Background); }
     void Click(string selector, double ratio = 0.5)
     {
         Render();
@@ -572,6 +641,17 @@ Run("CupriFace slider, independent restoration and keyboard", () =>
     }
     Render();
     Assert(Find(document.Root, n => n.Element?.GetAttribute("id") == "advanced-panel")!.Style.Display.ToString() == "None", "Advanced was not collapsed");
+    foreach (var fullShade in new[] { false, true, false })
+    {
+        ((ShadeModel)app.Model).SetBindable(nameof(ShadeModel.AllowFullShade), fullShade);
+        document.Refresh();
+        foreach (var preset in fullShade ? new[] { 0, 25, 50, 75, 100 } : new[] { 0, 20, 40, 60, 80 })
+        {
+            Click($".global-preset[data-set-value='{preset}']");
+            Equal(preset, ((ShadeModel)app.Model).GlobalLevel);
+            Equal(0, backend.GetLevel("a")); Equal(0, backend.GetLevel("b"));
+        }
+    }
     Click(".global-slider", 0.25);
     Equal(0, backend.GetLevel("a")); Equal(0, backend.GetLevel("b"));
     Click(".monitor[data-display='a']");
@@ -587,6 +667,9 @@ Run("CupriFace slider, independent restoration and keyboard", () =>
     Assert(Find(document.Root, n => n.Element?.Matches(".use-global") == true)!.Element!.GetAttribute("checked") != "true", "Switch did not unlink");
     Click(".monitor[data-display='a']");
     var unlinked = backend.GetLevel("a");
+    Click(".global-preset[data-set-value='60']");
+    Equal(60, ((ShadeModel)app.Model).GlobalLevel);
+    Equal(unlinked, backend.GetLevel("a")); Equal(0, backend.GetLevel("b"));
     Click(".global-slider", 0.6); Equal(unlinked, backend.GetLevel("a"));
     Click(".use-global");
     Assert(backend.GetLevel("a") != unlinked, "Switch did not link to global");
@@ -601,6 +684,12 @@ Run("CupriFace slider, independent restoration and keyboard", () =>
     var before = backend.GetLevel("a");
     document.DispatchKey(null, EditKey.Right);
     Assert(backend.GetLevel("a") > before, $"Keyboard did not adjust focused slider: {before} -> {backend.GetLevel("a")}");
+    Click(".allow-full-shade"); Render();
+    Assert(Find(document.Root, n => n.Element?.Matches(".global-slider") == true)!.Element!.GetAttribute("max") == "100", "Global slider limit did not update");
+    Assert(Find(document.Root, n => n.Element?.Matches(".individual-slider") == true)!.Element!.GetAttribute("max") == "100", "Individual slider limit did not update");
+    Click(".global-slider", 0.99);
+    Equal(100, ((ShadeModel)app.Model).GlobalLevel);
+    Click(".allow-full-shade"); Equal(80, ((ShadeModel)app.Model).GlobalLevel);
     backend.ReplaceDisplays([new("c", "New display", -1280, 0, 1280, 720)]);
     document.Refresh(); Render();
     Assert(Find(document.Root, n => n.Element?.GetAttribute("data-display") == "c") is not null, "Hotplug row not updated");
@@ -608,11 +697,51 @@ Run("CupriFace slider, independent restoration and keyboard", () =>
     // App-only image uses synthetic monitor data; never captures the user's desktop.
     backend.ReplaceDisplays(FakeBackend.InitialDisplays);
     backend.SetLevel("a", 30); backend.SetLevel("b", 55); document.Refresh();
+    Click(".allow-full-shade");
     var output = Path.GetFullPath("artifacts"); Directory.CreateDirectory(output);
-    File.WriteAllText(Path.Combine(output, "controls-debug.json"), document.DebugDump(720, 1000));
-    using var image = document.RenderToImage(720, 1000, app.Background);
+    File.WriteAllText(Path.Combine(output, "controls-debug.json"), document.DebugDump(720, 1200));
+    using var image = document.RenderToImage(720, 1200, app.Background);
     using var data = image.Encode(SKEncodedImageFormat.Png, 100);
     using var stream = File.Create(Path.Combine(output, "prototype-ui.png")); data.SaveTo(stream);
+});
+Run("About dialog opens, dismisses and routes the project link", () =>
+{
+    using var backend = new FakeBackend();
+    var app = new ShadeApp(backend);
+    var model = (ShadeModel)app.Model;
+    using var document = app.CreateDocument();
+    void Render() { using var frame = document.RenderToImage(720, 740, app.Background); }
+    void Click(string selector)
+    {
+        Render();
+        var node = Find(document.Root, n => n.Element?.Matches(selector) == true)
+            ?? throw new Exception("Control missing: " + selector);
+        var box = HitTesting.ScreenBox(node);
+        Assert(document.DispatchClick(box.X + box.W / 2, box.Y + box.H / 2), "Click unhandled");
+        document.DispatchPointerUp(box.X + box.W / 2, box.Y + box.H / 2);
+        Render();
+    }
+    Click(".about-toggle");
+    Assert(model.AboutOpen, "About did not open");
+    Assert(Find(document.Root, n => n.Element?.GetAttribute("role") == "dialog") is not null, "Missing modal semantics");
+    Equal("1.0.0-rc.1", model.AppVersion);
+    Equal("Shade", app.Title);
+    string? navigated = null;
+    bool external = false;
+    document.Navigated += e => { navigated = e.Href; external = e.External; };
+    Click(".project-link");
+    Equal("https://github.com/Wixely/Shade", navigated);
+    Assert(external, "Project link must open externally");
+    using (var frame = document.RenderToImage(720, 740, app.Background))
+    using (var data = frame.Encode(SKEncodedImageFormat.Png, 100))
+    using (var stream = File.Create(Path.GetFullPath("artifacts/about-ui.png"))) data.SaveTo(stream);
+    Click(".about-close");
+    Assert(!model.AboutOpen, "Close did not dismiss About");
+    Click(".about-toggle");
+    document.DispatchKey(null, EditKey.Escape);
+    Assert(!model.AboutOpen, "Escape did not dismiss About");
+    Equal(0, backend.GetLevel("a"));
+    Equal(0, backend.GetLevel("b"));
 });
 Run("Monitor buttons preserve geometry and scroll at small sizes", () =>
 {
@@ -624,12 +753,12 @@ Run("Monitor buttons preserve geometry and scroll at small sizes", () =>
     using var backend = new FakeBackend();
     backend.ReplaceDisplays(arrangement);
     var app = new ShadeApp(backend); using var doc = app.CreateDocument();
-    using (var frame = doc.RenderToImage(420, 400, app.Background)) { }
+    using (var frame = doc.RenderToImage(420, 500, app.Background)) { }
     var main = Find(doc.Root, n => n.Element?.Matches(".content-scroll") == true)!;
     Assert(main.MaxScrollY > 0, "Short window has no vertical scrolling");
-    Assert(doc.DispatchWheel(200, 350, 350), "Overflow did not handle scrolling");
+    Assert(doc.DispatchWheel(200, 450, 350), "Overflow did not handle scrolling");
     Assert(main.ScrollY > 0, "Scroll position did not change");
-    File.WriteAllText("artifacts/scroll-debug.json", doc.DebugDump(420, 400));
+    File.WriteAllText("artifacts/scroll-debug.json", doc.DebugDump(420, 500));
 });
 Run("Home Assistant settings recovery through CupriFace preserves unreadable data", () =>
 {
@@ -740,6 +869,8 @@ Run("Home Assistant form binds text, password and TLS controls", () =>
     Assert(doc.AccessibilitySetText(hostPath, "restored.example"), "Editable state did not recover");
     Equal("restored.example", model.BrokerHost);
     Click("cupri-switch[aria-label='Use TLS']"); Assert(!model.BrokerTls, "TLS switch binding failed");
+    Equal("1883", model.BrokerPort);
+    Click("cupri-switch[aria-label='Use TLS']"); Equal("8883", model.BrokerPort);
     model.SetBindable(nameof(ShadeModel.BrokerPassword), ""); doc.Refresh();
     using var image = doc.RenderToImage(720, 2000, app.Background);
     using var data = image.Encode(SKEncodedImageFormat.Png, 100); using var output = File.Create("artifacts/automation-ui.png"); data.SaveTo(output);

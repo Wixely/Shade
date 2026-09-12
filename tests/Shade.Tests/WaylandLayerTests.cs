@@ -44,7 +44,7 @@ internal static class WaylandLayerTests
 
         try
         {
-            await surfaces.Reconcile([first with { Level = 0 }, disabled with { Level = 81 }], token);
+            await surfaces.Reconcile([first with { Level = 0 }, disabled with { Level = 101 }], token);
             throw new Exception("Invalid batch was accepted");
         }
         catch (ArgumentOutOfRangeException) { }

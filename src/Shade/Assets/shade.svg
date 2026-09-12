@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <title>Shade</title>
+  <rect x="8" y="8" width="240" height="240" rx="48" fill="#141c24"/>
+  <rect x="36" y="48" width="184" height="136" rx="20" fill="#60cbb5"/>
+  <defs><clipPath id="screen"><rect x="48" y="60" width="160" height="112" rx="10"/></clipPath></defs>
+  <rect x="48" y="60" width="160" height="112" rx="10" fill="#28434a"/>
+  <path d="M48 60H154L102 172H48Z" fill="#c0f5e8" clip-path="url(#screen)"/>
+  <rect x="122" y="184" width="12" height="24" fill="#60cbb5"/>
+  <rect x="88" y="204" width="80" height="12" rx="6" fill="#60cbb5"/>
+</svg>

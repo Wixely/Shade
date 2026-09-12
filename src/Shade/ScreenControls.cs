@@ -16,11 +16,14 @@ public sealed class ScreenControls
     private readonly Dictionary<string, ScreenControl> screens = [];
     private long restoreVersion;
     public int GlobalLevel { get; private set; } = 30;
+    public bool AllowFullShade { get; private set; }
+    public int Maximum => AllowFullShade ? DimLevel.Maximum : DimLevel.DefaultMaximum;
     public long Revision { get; private set; }
 
     public ScreenControls(IDimmingBackend backend)
     {
         this.backend = backend;
+        AllowFullShade = backend.Preferences?.AllowFullShade == true;
         restoreVersion = backend.RestoreVersion;
         var initial = backend.Displays.Select(d => backend.GetLevel(d.Id)).Where(l => l > 0).Distinct().ToArray();
         if (backend.Preferences is { } saved) GlobalLevel = saved.GlobalLevel;
@@ -73,11 +76,38 @@ public sealed class ScreenControls
     }
 
     private void Persist() => backend.SavePreferences(new(GlobalLevel, screens.ToDictionary(p => p.Key,
-        p => new RememberedControl(p.Value.Enabled, p.Value.UseGlobal, p.Value.IndividualLevel))));
+        p => new RememberedControl(p.Value.Enabled, p.Value.UseGlobal, p.Value.IndividualLevel)), AllowFullShade));
+
+    public void SetAllowFullShade(bool enabled)
+    {
+        Synchronize();
+        if (AllowFullShade == enabled) return;
+        if (!enabled)
+        {
+            var changes = backend.Displays.Where(d => backend.GetLevel(d.Id) > DimLevel.DefaultMaximum)
+                .ToDictionary(d => d.Id, _ => DimLevel.DefaultMaximum);
+            if (changes.Count > 0) backend.SetLevels(changes);
+            GlobalLevel = Math.Min(GlobalLevel, DimLevel.DefaultMaximum);
+            foreach (var state in screens.Values)
+            {
+                state.IndividualLevel = Math.Min(state.IndividualLevel, DimLevel.DefaultMaximum);
+                state.AppliedLevel = Math.Min(state.AppliedLevel, DimLevel.DefaultMaximum);
+            }
+        }
+        AllowFullShade = enabled;
+        Persist();
+        Revision++;
+    }
+
+    private void ValidateLevel(int level)
+    {
+        DimLevel.Validate(level);
+        if (level > Maximum) throw new ArgumentOutOfRangeException(nameof(level), "Enable 100% shading in Advanced first.");
+    }
 
     public void SetGlobal(int level)
     {
-        DimLevel.Validate(level);
+        ValidateLevel(level);
         Synchronize();
         if (GlobalLevel == level) return;
         var changes = backend.Displays.Where(d => screens[d.Id].Enabled && screens[d.Id].UseGlobal)
@@ -113,7 +143,7 @@ public sealed class ScreenControls
 
     public void SetIndividual(string id, int level)
     {
-        DimLevel.Validate(level);
+        ValidateLevel(level);
         var state = Get(id);
         Apply(id, state, level);
         state.IndividualLevel = level;

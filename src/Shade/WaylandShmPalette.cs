@@ -17,8 +17,8 @@ internal sealed class WaylandShmPalette(WaylandWire wire, uint shm)
         var descriptor = memfd_create("shade-palette", 3); // CLOEXEC | ALLOW_SEALING
         if (descriptor < 0) throw new IOException("Could not allocate Wayland shared memory.");
         using var file = new SafeFileHandle(descriptor, ownsHandle: true);
-        var pixels = new byte[80 * 4];
-        for (var level = 1; level <= 80; level++)
+        var pixels = new byte[DimLevel.Maximum * 4];
+        for (var level = 1; level <= DimLevel.Maximum; level++)
             BitConverter.TryWriteBytes(pixels.AsSpan((level - 1) * 4), (uint)DimLevel.Alpha(level) << 24);
         RandomAccess.SetLength(file, pixels.Length);
         RandomAccess.Write(file, pixels, 0);

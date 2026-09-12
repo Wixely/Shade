@@ -127,10 +127,10 @@ internal sealed class WaylandCompositorFixture : IAsyncDisposable
                 var output = owner.outputs[coreOutputs[core]];
                 replies.Add(new(id, 3, Text(output.Name))); Geometry(replies, id, core, output);
             }
-            else if (kind == "wl_shm") { var id = r.UInt(); Check(r.UInt() == 320, "Unexpected palette size"); objects[id] = "pool"; }
+            else if (kind == "wl_shm") { var id = r.UInt(); Check(r.UInt() == DimLevel.Maximum * 4, "Unexpected palette size"); objects[id] = "pool"; }
             else if (kind == "pool" && opcode == 0)
             {
-                var id = r.UInt(); var offset = r.UInt(); Check(offset % 4 == 0 && offset < 320, "Invalid palette offset");
+                var id = r.UInt(); var offset = r.UInt(); Check(offset % 4 == 0 && offset < DimLevel.Maximum * 4, "Invalid palette offset");
                 Check(r.UInt() == 1 && r.UInt() == 1 && r.UInt() == 4 && r.UInt() == 0, "Invalid palette buffer");
                 objects[id] = "buffer"; buffers[id] = (int)offset / 4 + 1;
             }

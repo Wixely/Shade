@@ -6,7 +6,7 @@ namespace Shade;
 
 public sealed record AutomationScreen(string Id, string Label, bool Enabled, bool UseGlobal, int Level,
     int X, int Y, int Width, int Height);
-public sealed record AutomationState(int GlobalLevel, IReadOnlyList<AutomationScreen> Screens);
+public sealed record AutomationState(int GlobalLevel, IReadOnlyList<AutomationScreen> Screens, int Maximum = DimLevel.DefaultMaximum);
 public sealed record AutomationPublication(string Topic, string Payload);
 public sealed record AutomationCommand(string? ScreenId, string Control, string Value)
 {
@@ -26,7 +26,7 @@ public sealed record AutomationCommand(string? ScreenId, string Control, string 
 
 // No hostnames, screen order or geometry in discovery identity. Dimming percentages are
 // MQTT number entities, avoiding the inverted semantics of a light's brightness slider.
-public sealed class HomeAssistantProtocol(string installationId)
+public sealed class HomeAssistantProtocol(string installationId, string? computerName = null)
 {
     public string Root { get; } = "shade/" + ValidateId(installationId);
     public string Availability => Root + "/availability";
@@ -35,7 +35,7 @@ public sealed class HomeAssistantProtocol(string installationId)
     private string Discovery(string component, string id) => $"homeassistant/{component}/{installationId}/{id}/config";
     public IEnumerable<AutomationPublication> Build(AutomationState state, ISet<string> knownScreens)
     {
-        yield return Config("number", "global", "Global dimming", Root + "/global", null);
+        yield return Config("number", "global", "Global dimming", Root + "/global", null, state.Maximum);
         yield return new(Root + "/global/state", state.GlobalLevel.ToString(CultureInfo.InvariantCulture));
         foreach (var screen in state.Screens)
         {
@@ -43,7 +43,7 @@ public sealed class HomeAssistantProtocol(string installationId)
             var topic = Root + "/screen/" + screen.Id;
             yield return Config("switch", screen.Id + "_enabled", screen.Label + " dimming", topic + "/enabled", topic);
             yield return Config("switch", screen.Id + "_global", screen.Label + " use global", topic + "/global_link", topic);
-            yield return Config("number", screen.Id + "_level", screen.Label + " dimming level", topic + "/level", topic);
+            yield return Config("number", screen.Id + "_level", screen.Label + " dimming level", topic + "/level", topic, state.Maximum);
             yield return new(topic + "/availability", "online");
             yield return new(topic + "/enabled/state", screen.Enabled ? "ON" : "OFF");
             yield return new(topic + "/global_link/state", screen.UseGlobal ? "ON" : "OFF");
@@ -55,7 +55,7 @@ public sealed class HomeAssistantProtocol(string installationId)
             yield return new(Root + "/screen/" + id + "/availability", "offline");
     }
 
-    private AutomationPublication Config(string component, string id, string name, string topic, string? screenTopic)
+    private AutomationPublication Config(string component, string id, string name, string topic, string? screenTopic, int maximum = DimLevel.DefaultMaximum)
     {
         var availability = new JsonArray { (JsonNode)new JsonObject { ["topic"] = Availability } };
         if (screenTopic is not null) availability.Add((JsonNode)new JsonObject { ["topic"] = screenTopic + "/availability" });
@@ -66,10 +66,10 @@ public sealed class HomeAssistantProtocol(string installationId)
             ["retain"] = false, ["qos"] = 1, ["optimistic"] = false,
             ["availability_mode"] = "all",
             ["availability"] = availability,
-            ["device"] = new JsonObject { ["identifiers"] = new JsonArray("shade_" + installationId), ["name"] = "Shade", ["manufacturer"] = "Shade", ["model"] = "Screen dimmer" }
+            ["device"] = new JsonObject { ["identifiers"] = new JsonArray("shade_" + installationId), ["name"] = (computerName ?? Environment.MachineName) + " Shade", ["manufacturer"] = "Shade", ["model"] = "Screen dimmer" }
         };
         if (component == "number")
-        { fields["min"] = 0; fields["max"] = DimLevel.Maximum; fields["step"] = 1; fields["unit_of_measurement"] = "%"; fields["mode"] = "slider"; }
+        { fields["min"] = 0; fields["max"] = maximum; fields["step"] = 1; fields["unit_of_measurement"] = "%"; fields["mode"] = "slider"; }
         if (screenTopic is not null) fields["json_attributes_topic"] = screenTopic + "/attributes";
         return new(Discovery(component, id), fields.ToJsonString());
     }
@@ -104,7 +104,7 @@ public sealed class HomeAssistantProtocol(string installationId)
             // Accept equivalent MQTT numeric representations such as 20 and 20.0, but
             // reject fractions rather than silently rounding the requested one-percent scale.
             if (!decimal.TryParse(payload, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var level)
-                || level is < 0 or > DimLevel.Maximum || decimal.Truncate(level) != level) return null;
+                || level < 0 || level > state.Maximum || decimal.Truncate(level) != level) return null;
             payload = ((int)level).ToString(CultureInfo.InvariantCulture);
         }
         else if (control is not ("enabled" or "global_link") || payload is not ("ON" or "OFF")) return null;

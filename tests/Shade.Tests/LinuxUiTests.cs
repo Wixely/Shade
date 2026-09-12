@@ -172,7 +172,7 @@ internal static class LinuxUiTests
                     {
                         if (XFetchName(display, window, out var name) != 0)
                         {
-                            try { if (Marshal.PtrToStringUTF8(name)?.StartsWith("Shade -", StringComparison.Ordinal) == true) return window; }
+                            try { if (Marshal.PtrToStringUTF8(name) == "Shade") return window; }
                             finally { if (name != 0) X11Native.XFree(name); }
                         }
                     }

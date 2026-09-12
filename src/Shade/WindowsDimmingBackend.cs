@@ -76,12 +76,13 @@ public sealed class WindowsDimmingBackend : IDimmingBackend
                 DimLevel.Validate(control.IndividualLevel);
                 settings.Controls[display.Id] = control;
             }
+        settings.SetFullShade(value.AllowFullShade);
         PublishPreferences();
         ScheduleSave();
     });
 
     private void PublishPreferences() => preferences = new(settings.GlobalLevel,
-        new System.Collections.ObjectModel.ReadOnlyDictionary<string, RememberedControl>(new Dictionary<string, RememberedControl>(settings.Controls)));
+        new System.Collections.ObjectModel.ReadOnlyDictionary<string, RememberedControl>(new Dictionary<string, RememberedControl>(settings.Controls)), settings.AllowFullShade);
 
     public WindowsDimmingBackend(string? settingsPath = null) : this(settingsPath, WindowsDisplayCatalog.Read) { }
 

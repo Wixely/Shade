@@ -100,7 +100,7 @@ internal static class HiddenAutomationTests
             GetWindowThreadProcessId(window, out var process);
             if (process != Environment.ProcessId) return true;
             var text = new StringBuilder(128); GetWindowTextW(window, text, text.Capacity);
-            if (text.ToString().StartsWith("Shade - feasibility")) { found = window; return false; }
+            if (text.ToString() == "Shade") { found = window; return false; }
             return true;
         }, 0);
         return found;
