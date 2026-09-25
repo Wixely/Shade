@@ -4,7 +4,7 @@ A little less light. Just where you want it.
 
 Shade dims individual monitors using a compact interface that mirrors your desktop layout. Built with C#, .NET 10, and CupriFace, with Home Assistant control through MQTT.
 
-**Current version: 1.0.0.** Download the Windows x64 release from [GitHub Releases](https://github.com/Wixely/Shade/releases/latest). See the [release notes and known limitations](docs/release-1.0.0.md).
+**Current version: 1.1.0.** Download the Windows x64 release from [GitHub Releases](https://github.com/Wixely/Shade/releases/latest). See the [release notes and known limitations](docs/release-1.1.0.md).
 
 ## Controls
 
@@ -35,6 +35,30 @@ The current CupriFace interface, rendered with sample displays and no saved cred
 
 </details>
 
+## Command line
+
+Shade's command line sets the same controls the window does. Only one Shade runs per desktop session,
+so a second launch does not open a second window: it hands its command line to the instance already
+running, which applies it immediately and comes forward.
+
+```powershell
+Shade --global 40                            # set the global level
+Shade --screen 2 --level 60 --screen 3 --off # per-screen, in the order given
+Shade --screen all --on
+Shade --restore                              # clear every screen
+Shade --status                               # print the current state
+Shade --exit                                 # quit the running instance
+```
+
+`--screen` takes the number shown beside each monitor, or `all`. An unknown screen refuses the whole
+command line rather than applying part of it. Run `Shade --help` for the full list, including
+`--allow-full-shade`, `--home-assistant`, `--advanced`, `--show`, `--hide` and `--no-activate`.
+
+Broker credentials are never accepted on a command line, because other programs running as your
+account can read one. Set them in the Home Assistant section instead. See the [command-line
+reference](docs/command-line.md) for the option list, exit codes and how a forwarded command line
+reaches the running instance.
+
 ## Home Assistant
 
 Open **Home Assistant** in Shade and enter your MQTT 5 broker hostname, port and credentials. Use **Test connection**, then **Save and enable**. TLS uses the system certificate trust store. Switching TLS swaps the standard ports 1883 and 8883 while preserving custom port entries.
@@ -45,11 +69,11 @@ Home Assistant discovers a device named **PCNAME Shade**. Per-screen controls us
 
 Shade reconciles connected displays and layout changes automatically. Trusted hardware identities retain settings; ambiguous displays can receive an explicit saved identity through Advanced. Identical monitors without unique serials cannot always be distinguished after moving connections.
 
-Windows settings live in `%LOCALAPPDATA%\Shade`. Back up this folder before upgrading. The current settings format is 4. Use `--ephemeral --no-tray` for a test session without loading or saving normal settings. Only one Shade instance runs per desktop session.
+Windows settings live in `%LOCALAPPDATA%\Shade`. Back up this folder before upgrading. The current settings format is 4. Use `--ephemeral --no-tray` for a test session without loading or saving normal settings. Only one Shade instance runs per desktop session; a second launch updates that one instead of starting another.
 
 ## Platform status
 
-Windows is the primary release target. Linux X11 and Wayland backends are implemented, but desktop acceptance is unfinished; no Linux binary is published for this release. Physical display continuity, gaming/HDR/VRR performance, complete Home Assistant lifecycle testing and native text accessibility still have open validation items. See the [known limitations](docs/release-1.0.0.md#known-limitations).
+Windows is the primary release target. Linux X11 and Wayland backends are implemented, but desktop acceptance is unfinished; no Linux binary is published for this release. A forwarded command line applies its controls on both platforms, but raising or hiding the window is implemented only on Windows. Physical display continuity, gaming/HDR/VRR performance, complete Home Assistant lifecycle testing and native text accessibility still have open validation items. See the [known limitations](docs/release-1.1.0.md#known-limitations).
 
 ## Build and test
 

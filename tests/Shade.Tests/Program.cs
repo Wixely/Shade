@@ -350,6 +350,8 @@ if (args.Contains("--linux-catalog") && OperatingSystem.IsLinux()) Run("Linux XR
 });
 if (args.Contains("--mqtt")) Run("Isolated MQTT discovery, commands, credentials and reconnect", () => AutomationTests.Run().GetAwaiter().GetResult());
 Run("Single instance rejects duplicates and recovers after exit or crash", SingleInstanceTests.Run);
+Run("Command line parses controls, refuses invalid input and survives forwarding", CommandLineTests.Run);
+Run("Forwarded command lines apply live and untrusted channel input is refused", () => InstanceChannelTests.Run().GetAwaiter().GetResult());
 Run("Dimming range and alpha", () =>
 {
     Equal((byte)0, DimLevel.Alpha(0)); Equal((byte)204, DimLevel.Alpha(80));
@@ -724,7 +726,7 @@ Run("About dialog opens, dismisses and routes the project link", () =>
     Click(".about-toggle");
     Assert(model.AboutOpen, "About did not open");
     Assert(Find(document.Root, n => n.Element?.GetAttribute("role") == "dialog") is not null, "Missing modal semantics");
-    Equal("1.0.0", model.AppVersion);
+    Equal("1.1.0", model.AppVersion);
     Equal("Shade", app.Title);
     string? navigated = null;
     bool external = false;

@@ -9,10 +9,11 @@ public sealed class ShadeApp : CupriApp
     private readonly ShadeModel model;
     private long renderedRevision = -1;
     private CupriDocument? document;
-    public ShadeApp(IDimmingBackend backend, HomeAssistantIntegration? integration = null, bool closeToTray = true)
+    public ShadeApp(IDimmingBackend backend, HomeAssistantIntegration? integration = null, bool closeToTray = true,
+        InstanceRequests? requests = null, Action? shutdown = null)
     {
         CloseToTray = closeToTray && OperatingSystem.IsWindows();
-        model = new(backend, integration)
+        model = new(backend, integration, requests, shutdown, Title)
         {
             LifecycleHint = CloseToTray ? "Closing this window keeps Shade running. Open it from the tray, or choose Exit Shade to quit. Ctrl+Alt+Shift+R restores every screen."
                 : OperatingSystem.IsWindows() ? "Closing this window exits Shade and removes its overlays. Ctrl+Alt+Shift+R restores every screen."
@@ -237,6 +238,9 @@ public sealed class ShadeModel : IBindableAccessor
     private MonitorLayout layout = MonitorLayout.Create([]);
     private readonly ScreenControls controls;
     private readonly HomeAssistantIntegration integration;
+    private readonly InstanceRequests? requests;
+    private readonly Action? shutdown;
+    private readonly string windowTitle;
     private long automationPublishedRevision = -1;
     public bool AboutOpen { get; private set; }
     public string AppVersion { get; } = System.Reflection.CustomAttributeExtensions
@@ -308,11 +312,15 @@ public sealed class ShadeModel : IBindableAccessor
     public string AdvancedLabel => AdvancedOpen ? "Advanced  ▴" : "Advanced  ▾";
     public string AdvancedStyle => AdvancedOpen ? "display:block;" : "display:none;";
     public string CanvasStyle { get { _ = Displays; return layout.CanvasStyle; } }
-    public ShadeModel(IDimmingBackend backend, HomeAssistantIntegration? integration = null)
+    public ShadeModel(IDimmingBackend backend, HomeAssistantIntegration? integration = null,
+        InstanceRequests? requests = null, Action? shutdown = null, string windowTitle = "Shade")
     {
         this.backend = backend;
         controls = new(backend);
         this.integration = integration ?? new();
+        this.requests = requests;
+        this.shutdown = shutdown;
+        this.windowTitle = windowTitle;
         BrokerHost = this.integration.Host; BrokerPort = this.integration.Port.ToString(System.Globalization.CultureInfo.InvariantCulture);
         BrokerTls = this.integration.Tls; BrokerUsername = this.integration.Username;
     }
@@ -325,6 +333,7 @@ public sealed class ShadeModel : IBindableAccessor
                 try { command!.Apply(controls); }
                 catch (Exception ex) { ReportError(ex); }
             }
+            DrainRequests();
             var current = backend.Revision + controls.Revision;
             if (automationPublishedRevision != current)
             {
@@ -505,6 +514,108 @@ public sealed class ShadeModel : IBindableAccessor
         if (id is null) return;
         try { controls.Disable(id); error = null; }
         catch (Exception ex) { ReportError(ex); }
+    }
+
+    // A second launch forwards its command line instead of opening a window. Those requests are
+    // applied here, on the interface thread that owns every control, through the same paths the
+    // on-screen controls use, so a live window updates exactly as if the user had clicked.
+    private void DrainRequests()
+    {
+        if (requests is null) return;
+        while (requests.TryRead(out var request)) request!.Complete(Apply(request.Operations));
+        if (requests.TryClaimShutdown()) shutdown?.Invoke();
+    }
+
+    private InstanceResult Apply(IReadOnlyList<ShadeOperation> operations)
+    {
+        _ = Displays; // Refresh the cached layout so screen numbers match the ones on screen.
+        var tiles = layout.Tiles;
+        // Resolve every screen reference first: an unknown number rejects the whole request rather
+        // than applying the part of it that happened to come earlier.
+        foreach (var operation in operations)
+        {
+            if (operation.Verb is not (ShadeVerb.Level or ShadeVerb.Enabled or ShadeVerb.Link)) continue;
+            if (operation.Screen != ShadeOperation.AllScreens && tiles.All(t => t.Number != operation.Screen))
+                return InstanceResult.Rejected(tiles.Count == 0 ? "No screens are available."
+                    : $"Screen {operation.Screen} does not exist. Screens 1 to {tiles.Count} are connected.");
+        }
+        var lines = new List<string>();
+        try
+        {
+            foreach (var operation in operations)
+                if (Apply(operation, tiles, lines) is { } rejected) return rejected;
+        }
+        catch (Exception ex)
+        {
+            ReportError(ex);
+            return InstanceResult.Rejected(ex is ArgumentOutOfRangeException
+                ? $"That level needs 100% shading enabled; without it the highest level is {DimLevel.DefaultMaximum}%."
+                : "Shade could not apply the request. Screens may have changed.");
+        }
+        error = null;
+        uiRevision++;
+        return InstanceResult.Accepted(lines, operations.Any(o => o.Verb == ShadeVerb.Exit));
+    }
+
+    private InstanceResult? Apply(ShadeOperation operation, IReadOnlyList<MonitorTile> tiles, List<string> lines)
+    {
+        IEnumerable<string> Targets() => operation.Screen == ShadeOperation.AllScreens
+            ? tiles.Select(t => t.Display.Id)
+            : tiles.Where(t => t.Number == operation.Screen).Select(t => t.Display.Id);
+        var on = operation.Value != 0;
+        switch (operation.Verb)
+        {
+            case ShadeVerb.Global: controls.SetGlobal(operation.Value); break;
+            case ShadeVerb.Level: foreach (var id in Targets()) controls.SetIndividual(id, operation.Value); break;
+            case ShadeVerb.Enabled:
+                foreach (var id in Targets()) if (controls.Get(id).Enabled != on) controls.Toggle(id);
+                break;
+            case ShadeVerb.Link: foreach (var id in Targets()) controls.SetUseGlobal(id, on); break;
+            case ShadeVerb.FullShade: controls.SetAllowFullShade(on); break;
+            case ShadeVerb.Restore: controls.RestoreAll(); break;
+            case ShadeVerb.Advanced: AdvancedOpen = on; break;
+            case ShadeVerb.HomeAssistant: return Automation(on);
+            case ShadeVerb.Activate:
+            case ShadeVerb.Hide:
+                if (!OperatingSystem.IsWindows()) lines.Add("This desktop cannot show or hide the control window on request.");
+                else if (operation.Verb == ShadeVerb.Activate)
+                { if (!WindowActivation.Raise(windowTitle)) lines.Add("The control window could not be brought forward."); }
+                else if (!WindowActivation.Conceal(windowTitle)) lines.Add("The control window could not be hidden.");
+                break;
+            case ShadeVerb.Status: Report(tiles, lines); break;
+            case ShadeVerb.Exit: break; // Applied by the channel once this reply has been delivered.
+        }
+        return null;
+    }
+
+    private InstanceResult? Automation(bool enable)
+    {
+        if (!enable) { DisableAutomation(false); return null; }
+        if (integration.Host.Trim().Length == 0)
+            return InstanceResult.Rejected("Home Assistant has no saved broker. Set one in Shade first.");
+        // Reuse the saved broker and its protected password. Credentials never cross a command line,
+        // because other programs on this computer can read one.
+        _ = integration.ConfigureAsync(new(integration.Host, integration.Port, integration.Tls, integration.Username, ""), true, true);
+        uiRevision++;
+        return null;
+    }
+
+    private void Report(IReadOnlyList<MonitorTile> tiles, List<string> lines)
+    {
+        string Number(int value) => value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        lines.Add("version " + AppVersion);
+        lines.Add("global " + Number(GlobalLevel));
+        lines.Add("maximum " + Number(Maximum));
+        lines.Add("full-shade " + (AllowFullShade ? "on" : "off"));
+        lines.Add("home-assistant " + (integration.Enabled ? "on" : "off"));
+        lines.Add("advanced " + (AdvancedOpen ? "on" : "off"));
+        foreach (var tile in tiles)
+        {
+            var control = controls.Get(tile.Display.Id);
+            lines.Add(string.Join(' ', "screen", Number(tile.Number), control.Enabled ? "on" : "off",
+                "level", Number(backend.GetLevel(tile.Display.Id)),
+                control.UseGlobal ? "global" : "independent", InstanceChannel.Single(tile.Display.Label)));
+        }
     }
 }
 
