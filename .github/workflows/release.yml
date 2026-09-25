@@ -69,8 +69,11 @@ jobs:
           $checksums = 'artifacts/release-assets/SHA256SUMS.txt'
           $arguments = @('release', 'create', $tag, $archive, $checksums, '--repo', $env:GITHUB_REPOSITORY,
             '--verify-tag', '--draft', '--title', "Shade $version", '--notes-file', "docs/release-$version.md")
-          if ($version.Contains('-')) { $arguments += '--prerelease' }
+          $prerelease = $version.Contains('-')
+          if ($prerelease) { $arguments += '--prerelease' }
           gh @arguments
           if ($LASTEXITCODE) { throw 'Release creation/upload failed; any draft is retained for inspection' }
-          gh release edit $tag --repo $env:GITHUB_REPOSITORY --draft=false --latest=false
+          # Stable versions become the repository's latest release; prereleases never do.
+          $latest = if ($prerelease) { 'false' } else { 'true' }
+          gh release edit $tag --repo $env:GITHUB_REPOSITORY --draft=false --latest=$latest
           if ($LASTEXITCODE) { throw 'Release publication failed' }

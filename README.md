@@ -4,7 +4,7 @@ A little less light. Just where you want it.
 
 Shade dims individual monitors using a compact interface that mirrors your desktop layout. Built with C#, .NET 10, and CupriFace, with Home Assistant control through MQTT.
 
-**Current version: 1.0.0-rc.2.** Download the Windows x64 candidate from [GitHub Releases](https://github.com/Wixely/Shade/releases). See the [release notes and known limitations](docs/release-1.0.0-rc.2.md).
+**Current version: 1.0.0.** Download the Windows x64 release from [GitHub Releases](https://github.com/Wixely/Shade/releases/latest). See the [release notes and known limitations](docs/release-1.0.0.md).
 
 ## Controls
 
@@ -49,7 +49,7 @@ Windows settings live in `%LOCALAPPDATA%\Shade`. Back up this folder before upgr
 
 ## Platform status
 
-Windows is the primary release target. Linux X11 and Wayland backends are implemented, but desktop acceptance is unfinished; no Linux binary is offered for this candidate. Physical display continuity, gaming/HDR/VRR performance, complete Home Assistant lifecycle testing and native text accessibility still have open validation items. See the [release checklist](docs/release-1.0.0-rc.2.md).
+Windows is the primary release target. Linux X11 and Wayland backends are implemented, but desktop acceptance is unfinished; no Linux binary is published for this release. Physical display continuity, gaming/HDR/VRR performance, complete Home Assistant lifecycle testing and native text accessibility still have open validation items. See the [known limitations](docs/release-1.0.0.md#known-limitations).
 
 ## Build and test
 
@@ -78,4 +78,4 @@ The candidate includes a self-contained executable, license, release notes and e
 
 Shade's original code and artwork are [MIT licensed](LICENSE). Third-party components retain their respective licenses and notices under `third-party` and in their packages.
 
-Project: [Wixely/Shade](https://github.com/Wixely/Shade). Historical investigation and validation records remain available in [docs](docs/investigation.md), including the [2026-09-11 checkpoint](docs/resume-2026-09-11.md). These retain earlier findings; the current release notes describe the candidate's outstanding work.
+Project: [Wixely/Shade](https://github.com/Wixely/Shade). Historical investigation and validation records remain available in [docs](docs/investigation.md), including the [2026-09-11 checkpoint](docs/resume-2026-09-11.md). These retain earlier findings; the current release notes describe the outstanding work for this release.

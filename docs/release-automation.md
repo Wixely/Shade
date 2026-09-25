@@ -1,8 +1,12 @@
 # Release automation
 
-Reviewed 2026-09-12. Owner: Codex. Review when changing dependencies or release behavior.
+Reviewed 2026-09-25. Owner: Codex. Review when changing dependencies or release behavior.
 
-Push an annotated `v<Version>` tag whose version matches `src/Shade/Shade.csproj` and has a `docs/release-<Version>.md` file. The Release workflow checks out the exact tagged commit, installs the SDK from `global.json`, verifies vendored sources, restores locked dependencies, runs shared/MQTT tests, and packages Windows x64. It publishes a ZIP and SHA-256 checksum through GitHub Releases. Versions containing a hyphen are prereleases. Existing tags and releases are never overwritten.
+Push an annotated `v<Version>` tag whose version matches `src/Shade/Shade.csproj` and has a `docs/release-<Version>.md` file. The Release workflow checks out the exact tagged commit, installs the SDK from `global.json`, verifies vendored sources, restores locked dependencies, runs shared/MQTT tests, and packages Windows x64. It publishes a ZIP and SHA-256 checksum through GitHub Releases. Versions containing a hyphen are published as prereleases and are never marked latest; versions without one are published as stable releases and become the repository's latest release. Existing tags and releases are never overwritten.
+
+## Version bump checklist
+
+Raising `<Version>` in `src/Shade/Shade.csproj` also requires updating the About-dialog version assertion in `tests/Shade.Tests/Program.cs`, which compares the exact version string. The workflow's own test step fails on a mismatch, so the bump and the assertion must be committed together, along with the matching `docs/release-<Version>.md` notes and the README version line.
 
 The workflow uses Windows PowerShell 5.1, Git, the .NET SDK and GitHub CLI. It does not use Node/Python actions, caches or workflow-artifact uploads; durable files live in Releases. The job has a 30-minute timeout, serializes runs per tag, and grants only `contents: write`. The GitHub token is passed only to the release step. A release stays a draft until both uploads succeed. If a run fails after creating a draft, inspect that draft before rerunning; automatic overwrite is intentionally disabled.
 
