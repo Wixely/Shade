@@ -65,9 +65,14 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $tag = $env:GITHUB_REF_NAME
           $version = $tag.Substring(1)
+          # Two Windows downloads: the proven untrimmed build and the smaller NativeAOT one beside it.
           $archive = "artifacts/release-assets/Shade-$version-win-x64.zip"
+          $aot = "artifacts/release-assets/Shade-$version-win-x64-aot.zip"
           $checksums = 'artifacts/release-assets/SHA256SUMS.txt'
-          $arguments = @('release', 'create', $tag, $archive, $checksums, '--repo', $env:GITHUB_REPOSITORY,
+          foreach ($required in @($archive, $aot, $checksums)) {
+            if (-not (Test-Path -LiteralPath $required)) { throw "Missing release asset: $required" }
+          }
+          $arguments = @('release', 'create', $tag, $archive, $aot, $checksums, '--repo', $env:GITHUB_REPOSITORY,
             '--verify-tag', '--draft', '--title', "Shade $version", '--notes-file', "docs/release-$version.md")
           $prerelease = $version.Contains('-')
           if ($prerelease) { $arguments += '--prerelease' }

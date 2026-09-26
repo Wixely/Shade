@@ -1,9 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
+    <!-- Windows subsystem so no console window is ever created for a desktop launch. The command
+         line still answers in a terminal by attaching to it; see ConsoleOutput. -->
+    <OutputType>WinExe</OutputType>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
     <Product>Shade</Product>
     <Title>Shade</Title>
     <Description>Multi-monitor screen dimming with Home Assistant integration.</Description>
@@ -19,6 +21,32 @@
     <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --link-attributes &quot;$(MSBuildProjectDirectory)/Silk.LinkAttributes.xml&quot;</_ExtraTrimmerArgs>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildProjectDirectory)/Silk.LinkAttributes.xml</MSBuildAllProjects>
   </PropertyGroup>
+  <!-- NativeAOT cannot embed unmanaged dependencies, so a single-file AOT build carries them as
+       resources and restores them at startup. Only the AOT build is affected; every other build
+       keeps shipping them as ordinary files beside the executable, or inside the single-file
+       bundle the runtime extracts for itself. -->
+  <!-- Resource names are assigned early, so a resource added any later than AssignTargetPaths never
+       reaches the compiler: hooking PrepareResources or CoreCompile silently embeds nothing.
+       ResolvePackageAssets supplies the items and has already run by this point. -->
+  <Target Name="EmbedNativeDependencies" DependsOnTargets="ResolvePackageAssets" BeforeTargets="AssignTargetPaths" Condition="'$(Aot)' == 'true'">
+    <Error Condition="'@(NativeCopyLocalItems)' == ''"
+           Text="No unmanaged dependencies resolved, so a single-file AOT build would ship without Skia, HarfBuzz, GLFW or SDL." />
+    <ItemGroup>
+      <_EmbeddedNativeDependency Include="@(NativeCopyLocalItems)" />
+      <EmbeddedResource Include="@(NativeCopyLocalItems)">
+        <LogicalName>Shade.Native.%(Filename)%(Extension)</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+  <!-- Having embedded them, keep them out of the publish output so one file is produced. Only the
+       ones actually embedded are dropped, so a failure to embed cannot quietly delete them. -->
+  <Target Name="DropEmbeddedNativeDependencies" AfterTargets="ComputeResolvedFilesToPublishList" Condition="'$(Aot)' == 'true'">
+    <Error Condition="'@(_EmbeddedNativeDependency)' == ''"
+           Text="Unmanaged dependencies were never embedded, so they must not be dropped from the publish output." />
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(_EmbeddedNativeDependency)" />
+    </ItemGroup>
+  </Target>
   <ItemGroup>
     <EmbeddedResource Include="Assets/shade.png" LogicalName="Shade.Assets.shade.png" />
     <ProjectReference Include="../../third-party/CupriFace.Engine/Shade.CupriEngine.csproj" />

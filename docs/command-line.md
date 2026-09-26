@@ -65,7 +65,7 @@ so a script that must survive a topology change should read `--status` first.
 `--status` prints one `name value` line per setting and one line per screen:
 
 ```
-version 1.1.0
+version 1.2.0
 global 40
 maximum 80
 full-shade off

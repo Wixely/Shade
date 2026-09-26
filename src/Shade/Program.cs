@@ -9,6 +9,10 @@ if (args.Length >= 2 && args[0] == "--wayland-worker" && OperatingSystem.IsLinux
 if (args.Length >= 2 && args[0] == "--x11-worker" && OperatingSystem.IsLinux())
     return X11OverlayWorker.Run(string.IsNullOrEmpty(args[1]) ? null : args[1], args.Contains("--test-key"));
 
+// Before anything writes: a windows-subsystem application has no console of its own, so a command
+// line run from a terminal has to join that terminal's console to be seen at all.
+if (OperatingSystem.IsWindows()) ConsoleOutput.UseParentConsole();
+
 ShadeInvocation invocation;
 try { invocation = ShadeCommandLine.Parse(args); }
 catch (CommandLineException ex) { Console.Error.WriteLine(ex.Message); return 4; }
@@ -90,6 +94,10 @@ try
         try { guard.Dispose(); } catch (Exception ex) when (ex is not OutOfMemoryException) { }
         Environment.Exit(0);
     }
+
+    // A single-file NativeAOT build carries its unmanaged dependencies as resources; restore them
+    // before anything loads Skia, GLFW or SDL. A no-op in every other build.
+    if (OperatingSystem.IsWindows()) EmbeddedNativeLibraries.Restore();
 
     // Register the packaged GLFW window/input implementations explicitly. The software host
     // uses CupriFace's direct SDL implementation and does not need Silk platform discovery.

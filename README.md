@@ -4,7 +4,7 @@ A little less light. Just where you want it.
 
 Shade dims individual monitors using a compact interface that mirrors your desktop layout. Built with C#, .NET 10, and CupriFace, with Home Assistant control through MQTT.
 
-**Current version: 1.1.0.** Download the Windows x64 release from [GitHub Releases](https://github.com/Wixely/Shade/releases/latest). See the [release notes and known limitations](docs/release-1.1.0.md).
+**Current version: 1.2.0.** Download the Windows x64 release from [GitHub Releases](https://github.com/Wixely/Shade/releases/latest) — take `Shade-1.2.0-win-x64.zip`, or the smaller ahead-of-time `-aot` build. See the [release notes and known limitations](docs/release-1.2.0.md).
 
 ## Controls
 
@@ -73,7 +73,7 @@ Windows settings live in `%LOCALAPPDATA%\Shade`. Back up this folder before upgr
 
 ## Platform status
 
-Windows is the primary release target. Linux X11 and Wayland backends are implemented, but desktop acceptance is unfinished; no Linux binary is published for this release. A forwarded command line applies its controls on both platforms, but raising or hiding the window is implemented only on Windows. Physical display continuity, gaming/HDR/VRR performance, complete Home Assistant lifecycle testing and native text accessibility still have open validation items. See the [known limitations](docs/release-1.1.0.md#known-limitations).
+Windows is the primary release target. Linux X11 and Wayland backends are implemented, but desktop acceptance is unfinished; no Linux binary is published for this release. A forwarded command line applies its controls on both platforms, but raising or hiding the window is implemented only on Windows. Physical display continuity, gaming/HDR/VRR performance, complete Home Assistant lifecycle testing and native text accessibility still have open validation items. See the [known limitations](docs/release-1.2.0.md#known-limitations).
 
 ## Build and test
 
