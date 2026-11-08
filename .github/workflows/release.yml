@@ -73,7 +73,7 @@ jobs:
             if (-not (Test-Path -LiteralPath $required)) { throw "Missing release asset: $required" }
           }
           $arguments = @('release', 'create', $tag, $archive, $aot, $checksums, '--repo', $env:GITHUB_REPOSITORY,
-            '--verify-tag', '--draft', '--title', "Shade $version", '--notes-file', "docs/release-$version.md")
+            '--verify-tag', '--draft', '--title', "Shade $version", '--generate-notes')
           $prerelease = $version.Contains('-')
           if ($prerelease) { $arguments += '--prerelease' }
           gh @arguments

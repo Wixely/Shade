@@ -4,7 +4,7 @@ A little less light. Just where you want it.
 
 Shade dims individual monitors using a compact interface that mirrors your desktop layout. Built with C#, .NET 10, and CupriFace, with Home Assistant control through MQTT.
 
-**Current version: 1.2.0.** Download the Windows x64 release from [GitHub Releases](https://github.com/Wixely/Shade/releases/latest) — take `Shade-1.2.0-win-x64.zip`, or the smaller ahead-of-time `-aot` build. See the [release notes and known limitations](docs/release-1.2.0.md).
+**Current version: 1.2.4.** Download the Windows x64 release from [GitHub Releases](https://github.com/Wixely/Shade/releases/latest) — take `Shade-1.2.4-win-x64.zip`, or the smaller ahead-of-time `-aot` build. See the [release notes](https://github.com/Wixely/Shade/releases/tag/v1.2.4) and the [known limitations](docs/release-1.2.0.md#known-limitations) (unchanged since 1.2.0).
 
 ## Controls
 
@@ -94,7 +94,7 @@ Prepare a fresh local Windows candidate:
 ./scripts/prepare-release.ps1
 ```
 
-The candidate includes a self-contained executable, license, release notes and executable checksum under ignored `artifacts/releases/`. It uses the existing untrimmed single-file baseline; trimming and NativeAOT remain optional experiments. Complete the release-note gates before distribution. The local script never uploads or tags a release. The [release workflow](.github/workflows/release.yml) builds, tests and publishes when a matching version tag is pushed; see [release automation](docs/release-automation.md).
+The candidate includes a self-contained executable, license and executable checksum under ignored `artifacts/releases/`. It uses the existing untrimmed single-file baseline; trimming and NativeAOT remain optional experiments. The local script never uploads or tags a release. The [release workflow](.github/workflows/release.yml) builds, tests and publishes when a matching version tag is pushed, with notes generated from the commits since the previous tag; see [release automation](docs/release-automation.md).
 
 [Cupri screenshot regeneration](docs/images/README.md) uses synthetic displays and no saved credentials. The vendored CupriFace source is pinned and verified during restore; see [dependency provenance](docs/dependencies.md).
 
@@ -102,4 +102,4 @@ The candidate includes a self-contained executable, license, release notes and e
 
 Shade's original code and artwork are [MIT licensed](LICENSE). Third-party components retain their respective licenses and notices under `third-party` and in their packages.
 
-Project: [Wixely/Shade](https://github.com/Wixely/Shade). Historical investigation and validation records remain available in [docs](docs/investigation.md), including the [2026-09-11 checkpoint](docs/resume-2026-09-11.md). These retain earlier findings; the current release notes describe the outstanding work for this release.
+Project: [Wixely/Shade](https://github.com/Wixely/Shade). Historical investigation and validation records remain available in [docs](docs/investigation.md), including the [2026-09-11 checkpoint](docs/resume-2026-09-11.md). These retain earlier findings; [docs/release-1.2.0.md#known-limitations](docs/release-1.2.0.md#known-limitations) describes the outstanding work as of that release.

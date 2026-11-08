@@ -29,11 +29,9 @@ try {
     }
     if ($LASTEXITCODE -ne 0) { throw 'Release candidate publish failed.' }
     Copy-Item -LiteralPath (Join-Path $repo 'LICENSE') -Destination $output
-    Copy-Item -LiteralPath (Join-Path $repo ('docs/release-' + $version + '.md')) -Destination (Join-Path $output 'RELEASE-NOTES.md')
     & (Join-Path $PSScriptRoot 'collect-release-notices.ps1') -OutputDirectory $output
     $hash = Get-FileHash -LiteralPath (Join-Path $output 'Shade.exe') -Algorithm SHA256
     [IO.File]::WriteAllText((Join-Path $output 'SHA256SUMS.txt'), ($hash.Hash.ToLowerInvariant() + "  Shade.exe`n"))
     Write-Output ('Local candidate prepared: ' + $output)
-    Write-Output 'See RELEASE-NOTES.md for known limitations.'
 }
 finally { Pop-Location }
