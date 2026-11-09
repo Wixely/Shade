@@ -1,7 +1,13 @@
+param([string]$Version)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent $PSScriptRoot
-[xml]$project = Get-Content (Join-Path $repo 'src/Shade/Shade.csproj')
-$version = @($project.Project.PropertyGroup.Version | Where-Object { $_ })[0]
+if (-not $Version) {
+    # No -Version given: this is an ad-hoc local run, not a tagged release. Fall back to whatever
+    # is in the csproj so the script still works, but CI always passes the tag-derived version.
+    [xml]$project = Get-Content (Join-Path $repo 'src/Shade/Shade.csproj')
+    $Version = @($project.Project.PropertyGroup.Version | Where-Object { $_ })[0]
+}
+$version = $Version
 if ($version -notmatch '^\d+\.\d+\.\d+(-[A-Za-z0-9.-]+)?$') { throw 'Invalid release version' }
 $assets = Join-Path $repo 'artifacts/release-assets'
 if (Test-Path -LiteralPath $assets) { throw 'Release assets already exist; preserve them and use a clean workspace.' }
@@ -15,8 +21,8 @@ foreach ($variant in @(
         @{ Suffix = '-win-x64'; Aot = $false },
         @{ Suffix = '-win-x64-aot'; Aot = $true })) {
     $relative = 'artifacts/releases/' + $version + $variant.Suffix
-    if ($variant.Aot) { & (Join-Path $PSScriptRoot 'prepare-release.ps1') -OutputDirectory $relative -Aot }
-    else { & (Join-Path $PSScriptRoot 'prepare-release.ps1') -OutputDirectory $relative }
+    if ($variant.Aot) { & (Join-Path $PSScriptRoot 'prepare-release.ps1') -OutputDirectory $relative -Aot -Version $version }
+    else { & (Join-Path $PSScriptRoot 'prepare-release.ps1') -OutputDirectory $relative -Version $version }
     $candidate = Join-Path $repo $relative
     $files = @(Get-ChildItem -LiteralPath $candidate -Recurse -File)
     foreach ($file in $files) {
