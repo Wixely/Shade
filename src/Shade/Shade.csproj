@@ -53,6 +53,6 @@
     <ProjectReference Include="../../third-party/CupriFace.Shell/Shade.CupriHost.csproj" />
     <PackageReference Include="MQTTnet" Version="5.2.0.1603" />
     <PackageReference Include="Tmds.DBus.Protocol" Version="0.94.2" />
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.14" />
   </ItemGroup>
 </Project>
