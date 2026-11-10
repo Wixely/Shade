@@ -726,7 +726,8 @@ Run("About dialog opens, dismisses and routes the project link", () =>
     Click(".about-toggle");
     Assert(model.AboutOpen, "About did not open");
     Assert(Find(document.Root, n => n.Element?.GetAttribute("role") == "dialog") is not null, "Missing modal semantics");
-    Equal("1.2.4", model.AppVersion);
+    Assert(System.Text.RegularExpressions.Regex.IsMatch(model.AppVersion, @"^\d+\.\d+\.\d+"),
+        "AppVersion did not resolve to a version string: " + model.AppVersion);
     Equal("Shade", app.Title);
     string? navigated = null;
     bool external = false;

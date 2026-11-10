@@ -1,8 +1,13 @@
-param([string]$OutputDirectory, [switch]$Aot)
+param([string]$OutputDirectory, [switch]$Aot, [string]$Version)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent $PSScriptRoot
-[xml]$project = Get-Content (Join-Path $repo 'src/Shade/Shade.csproj')
-$version = @($project.Project.PropertyGroup.Version | Where-Object { $_ })[0]
+if (-not $Version) {
+    # No -Version given: this is an ad-hoc local run, not a tagged release. Fall back to whatever
+    # is in the csproj so the script still works, but CI always passes the tag-derived version.
+    [xml]$project = Get-Content (Join-Path $repo 'src/Shade/Shade.csproj')
+    $Version = @($project.Project.PropertyGroup.Version | Where-Object { $_ })[0]
+}
+$version = $Version
 $suffix = if ($Aot) { '-win-x64-aot' } else { '-win-x64' }
 if (-not $OutputDirectory) { $OutputDirectory = 'artifacts/releases/' + $version + $suffix }
 $output = [IO.Path]::GetFullPath((Join-Path $repo $OutputDirectory))
@@ -19,12 +24,12 @@ try {
         # single-file app. The warnings stay in the log deliberately rather than being suppressed:
         # they are the standing reason to keep verifying that this build finds its libraries.
         dotnet publish src/Shade/Shade.csproj -c Release -r win-x64 --self-contained true `
-            -p:Aot=true -p:TreatWarningsAsErrors=false `
+            -p:Aot=true -p:TreatWarningsAsErrors=false -p:Version=$version `
             -p:DebugType=None -p:DebugSymbols=false -o $output
     }
     else {
         dotnet publish src/Shade/Shade.csproj -c Release -r win-x64 --self-contained true `
-            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:Version=$version `
             -p:Trim=false -p:Aot=false -p:DebugType=None -p:DebugSymbols=false -o $output
     }
     if ($LASTEXITCODE -ne 0) { throw 'Release candidate publish failed.' }
